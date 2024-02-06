@@ -298,6 +298,9 @@ self.embedding = ChatHaruhi.bge_small
 ```python
 class ChatHaruhi:
 
+    def __init__( self ):
+        pass
+
     def rag_retrieve( self, query_rags, rest_limit ):
         # 返回一个rag_ids的列表
         retrieved_ids = []
