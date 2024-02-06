@@ -96,7 +96,7 @@ bot的定义
 {{RAG对话}}
 ```
 
-这里"{{RAG对话}}"直接是以单行字符串的形式存在，当ChatHaruhi类发现这个的时候，会自动计算RAG，以凉宫春日为例，他的persona直接就写成
+这里"{{RAG对话}}"直接是以单行字符串的形式存在，当ChatHaruhi类发现这个的时候，会自动计算RAG，以凉宫春日为例，他的persona直接就写成。同时也支持纯英文 {{RAG-dialogue}}
 
 ```
 你正在扮演凉宫春日，你正在cosplay涼宮ハルヒ。
@@ -128,7 +128,7 @@ bot的定义
 {{RAG多对话|token<=1500|n<=5}}
 ```
 
-这样的设计，这样会retrieve出最多不超过n段对话，总共不超过token个数个对话
+这样的设计，这样会retrieve出最多不超过n段对话，总共不超过token个数个对话。对于英文用户为{{RAG-dialogues|token<=1500|n<=5}}
 
 ### RAG对话的变形形式2，使用|进行后面语句的搜索
 
@@ -218,6 +218,10 @@ response = await chatbot.async_chat(user='阿虚', text = '我看新一年的棒
 
 如果不设置我们会抛出一个error
 
+## role_from_hf
+
+本质上就是role_from_jsonl
+
 ## 分别设置persona和role_name
 
 这个时候作为新人物考虑，默认没有RAG库，即Zero模式
@@ -228,6 +232,8 @@ response = await chatbot.async_chat(user='阿虚', text = '我看新一年的棒
 
 ## 分别设置persona, role_name, texts, vecs
 
+
+
 # 额外变量
 
 ## max_input_token
@@ -235,6 +241,8 @@ response = await chatbot.async_chat(user='阿虚', text = '我看新一年的棒
 默认为1600，会根据这个来限制history的长度
 
 ## user_name_in_message
+
+(这个功能在现在的预期核心代码中还没实现)
 
 默认为'default'， 当用户始终用同一个user_name和角色对话的时候，并不添加
 
@@ -246,15 +254,23 @@ response = await chatbot.async_chat(user='阿虚', text = '我看新一年的棒
 
 如果'not_add' 则永远不添加
 
-## tokenizer
+S MSG_U1 MSG_A MSG_U1 MSG_A
+
+当出现U2后
+
+S, U1:MSG_U1, A:MSG_A, U1:MSG_U1, A:MSG_A, U2:MSG_U2
+
+## token_counter
 
 tokenizer默认为gpt3.5的tiktoken，设置为None的时候，不进行任何的token长度限制
 
 ## transfer_haruhi_2_zero
 
+(这个功能在现在的预期核心代码中还没实现)
+
 默认为true
 
-把原本ChatHaruhi的 角色: 「对话」的格式，去掉「」改为""
+把原本ChatHaruhi的 角色: 「对话」的格式，去掉「」
 
 # Embedding
 
@@ -268,10 +284,66 @@ self.embedding = ChatHaruhi.bge_small
 
 对于输入的文本，我们会使用这个embedding来进行encode然后进行检索替换掉RAG的内容
 
-
-
 # 辅助接口
 
 ## save_to_jsonl
 
 把一个角色保存成jsonl格式，方便上传hf
+
+
+# 预计的伪代码
+
+这里的核心就是去考虑ChatHaruhi下get_message函数的伪代码
+
+```python
+class ChatHaruhi:
+
+    def rag_retrieve( self, query_rags, rest_limit ):
+        # 返回一个rag_ids的列表
+        retrieved_ids = []
+        rag_ids = []
+
+        for query_rag in query_rags:
+            query = query_rag['query']
+            n = query_rag['n']
+            max_token = rest_limit
+            if rest_limit > query_rag['max_token'] and query_rag['max_token'] > 0:
+                max_token = query_rag['max_token']
+
+            rag_id = self.rag_retrieve( query, n, max_token, avoid_ids = retrieved_ids )
+            rag_ids.append( rag_id )
+            retrieved_ids += rag_id
+
+    def get_message(self, user, text):
+
+        query_token = self.token_counter( text )
+
+        # 首先获取需要多少个rag story
+        query_rags, persona_token = self.parse_persona( self.persona, text )
+        #每个query_rag需要饱含
+        # "n" 需要几个story
+        # "max_token" 最多允许多少个token，如果-1则不限制
+        # "query" 需要查询的内容
+        # "lid" 需要替换的行，这里直接进行行替换，忽视行的其他内容
+        
+        rest_limit = self.max_input_token - persona_token - query_token
+
+        rag_ids = self.rag_retrieve( query_rags, rest_limit )
+        
+        # 将rag_ids对应的故事 替换到persona中
+        augmented_persona = self.augment_persona( self.persona, rag_ids )
+
+        system_prompt = self.package_system_prompt( self.role_name, augmented_persona )
+
+        token_for_system = self.token_counter( system_prompt )
+
+        rest_limit = self.max_input_token - token_for_system - query_token
+
+        messages = [{"role":"system","content":system_prompt}]
+
+        messages = self.append_history_under_limit( messages, rest_limit )
+
+        messages.append({"role":"user",query})
+
+        return messages
+```
