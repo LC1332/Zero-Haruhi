@@ -20,6 +20,7 @@
 - [ ] 支持原来Haruhi的角色卡片，以及30本新小说的抽取的角色，使用中英文通用的embedding，相比于pygmalion模型，增加动态rag的角色卡片
 - [ ] Haruhi-Zero的模型接入Silly Travern生态
 - [ ] 训练各个尺寸的模型，并且进行合适的量化，使得一些免费的云服务机以及本地显卡可以进行运行
+- [ ] 完成一个tech report并发布在arxiv
 - [ ] 一个卡片分享的网站，以及支持用户上传小说进行角色记忆库的抽取
 
 ## 基础使用
@@ -52,7 +53,7 @@ print(response)
 
 我们提供了一个基础的gradio来进行角色扮演。[Gradio Demo链接](https://github.com/LC1332/Zero-Haruhi/blob/main/notebook/HaruhiZeroGradio_Qwen.ipynb)
 
-## 基础的效果
+## 基础的效果(0.3)
 
 在这里我们使用[电影提取和PIPPA机翻](https://huggingface.co/datasets/silk-road/Haruhi-Zero-RolePlaying-movie-PIPPA)的人物卡片数据集进行了简单的测试。在这里我们cherry pick一些结果
 
@@ -78,24 +79,65 @@ print(response)
 - [豆角](https://github.com/goodnessSZW)完成了qwen-1.8B Lora和Yi-6B Lora训练，我们会在之后上传
 - [米唯实](https://github.com/hhhwmws0117)测试并完成了demo中的模型inference代码
 
-## 数据
+## 版本迭代实验
 
 ### 0.1版本
 
-在0.1版本中，我们收集了多个不同Source的数据集，构成了基础的数据集 [Haruhi-Zero](https://huggingface.co/datasets/silk-road/Haruhi-Zero)
+在0.1版本中，我们收集了多个不同Source的数据集，构成了基础的数据集 [Haruhi-Zero](https://huggingface.co/datasets/silk-road/Haruhi-Zero)，其中包括了100k左右的长对话，在使用2500个token切开后，仍然保留了120k个conversation。
+
+同时作为辅助任务我们还使用了一个[小说续写的数据集](https://huggingface.co/datasets/silk-road/ChatHaruhi_NovelWriting)
+
+0.1版本在Yi-6B上进行了tuning，我们发现初步可以实现一定的角色扮演
+
+<p align="center">
+    <img src="/figures/cat_example.png" height="300">
+</p>
+
+但是会有很多身份认知的问题，以及大量会回复"作为一个AI助手"这样的句子
 
 ### 0.2版本
 
+使用qwen-7B进行tuning，去掉了AI助手的句子
+
 ### 0.3版本
 
+增加了10k左右的身份认知数据。效果在前面有展示。基本实现zero-shot的角色扮演
 
----
+### 模型的后续迭代计划
 
-The plan which extend ChatHaruhi into Zero-shot Roleplaying model
+- Haruhi Like的小说数据(0.5版本加入)
+  - 用对话抽取模型，重新构造2k级别的小说人物，均匀抽取小说的chunk，进行人物system prompt总结
+  - 看看Janitor最好的人物是怎么构造的
+  - 使用抽取抽取50k级别的小说的人物，用其他角色的长对话进行query
+  - RAG的时候每个对话出现2-3次，然后在测试集出现一次
+  - 80%的openai和20%的claude
 
-详细的计划见
+## 加入我们
 
-https://o9z6tor1qu.feishu.cn/docx/LxTWdGnP2oQ0oUx8H0wcmyZCnrb
+Haruhi-Zero是一个正在进行的开源项目，我们还在持续招人中包括:
 
-这个repo用来记录一些中间的实验代码和数据筹集的代码
+- 后端和数据准备
+    - 主要的开发量会在这一部分，包括数据的收集，清洗，以及后端的api的搭建，懒人包的打包等
+- 模型训练
+    - 如果你希望进行辅助任务的训练，需要自备4090或者A100以上的显卡
+    - 如果你希望进行主任务的训练，需要准备多张A100的环境
+- 设计师
+    - 角色卡片交换网站的设计师
+- 前端
+    - 角色卡片交换网站的前端
+
+联系我，去我的知乎页面https://www.zhihu.com/people/cheng-li-47
+
+或者B站页面https://space.bilibili.com/1572312 
+
+或者发邮件chengli.thu@gmail.com 告诉我你的微信以及你希望参与的部分
+
+## 赞助
+
+Haruhi-Zero项目和凉宫春日项目和骆驼项目使用公共的赞助账户，如果你希望赞助我们，可以通过以下方式
+
+如果你有兴趣赞助Chat凉宫春日 或者 骆驼项目，请点击[主项目](https://github.com/LC1332/Luotuo-Chinese-LLM#%E8%B5%9E%E5%8A%A9sponsorships)或者查看[赞助表单](https://github.com/LC1332/Luotuo-Chinese-LLM/blob/main/data/Sponsorship_and_balance.md)
+
+因为之前几次黑客松的奖金都入账了赞助账户，所以目前余额还是比较多。其实我们更希望A100及以上的显卡赞助，以及openai企业api和claude企业api的赞助。如果你有这些资源，可以联系我，我们会在赞助表单上标注你的赞助。
+
 
