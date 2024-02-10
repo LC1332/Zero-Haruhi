@@ -11,7 +11,7 @@ def foo_bge_zh_15( text ):
     print("warning! foo_bge_zh_15 is not implemented yet, 请催促 米唯实 进行实现" )
     return [random.random() for _ in range(dim)]
 
-def foo_bce( text )
+def foo_bce( text ):
     dim = 768
     print("warning! foo_bce is not implemented yet, 请催促 米唯实 进行实现" )
     return [random.random() for _ in range(dim)]
