@@ -1,3 +1,15 @@
+import tiktoken
+
+_enc_model = None
+
+
+def tiktoken_counter( text ):
+    global _enc_model
+
+    if _enc_model is None:
+        _enc_model = tiktoken.get_encoding("cl100k_base")
+
+    return len(_enc_model.encode(text))
 
 
 def string_to_base64(text):
