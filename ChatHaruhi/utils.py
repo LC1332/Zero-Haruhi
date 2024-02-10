@@ -18,6 +18,7 @@ def base64_to_string(base64_data):
 
 
 def float_array_to_base64(float_arr):
+    import struct
     import base64
     byte_array = b''
     
@@ -32,6 +33,7 @@ def float_array_to_base64(float_arr):
     return base64_data.decode('utf-8')
 
 def base64_to_float_array(base64_data):
+    import struct
     import base64
     byte_array = base64.b64decode(base64_data)
     
