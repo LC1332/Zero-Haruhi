@@ -42,6 +42,10 @@ class NaiveDB:
     def clean_flag(self):
         self.flags = [True for _ in self.stories]
 
+    def disable_story_with_ids(self, close_ids ):
+        for id in close_ids:
+            self.flags[id] = False
+
     def close_last_search(self):
         for id in self.last_search_ids:
             self.flags[id] = False
