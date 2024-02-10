@@ -55,9 +55,9 @@ def foo_bce( text ):
 
 def foo_openai( text ):
     dim = 1536
-    model="text-embedding-ada-002"
-    text = text.replace("\n", " ")
-    return client.embeddings.create(input = [text], model=model).data[0].embedding
+    # model="text-embedding-ada-002"
+    # text = text.replace("\n", " ")
+    # return client.embeddings.create(input = [text], model=model).data[0].embedding
     print("warning! foo_openai is not implemented yet, 请催促 米唯实 进行实现" )
     return [random.random() for _ in range(dim)]
 
