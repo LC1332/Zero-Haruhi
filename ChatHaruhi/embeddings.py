@@ -5,6 +5,9 @@ import random
 #             elif embedding == 'bge_zh':
 #                 embed_name = 'bge_zh_s15'
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
 embedname2columnname = {
     "luotuo_openai":"luotuo_openai",
     "openai":"luotuo_openai",
@@ -85,12 +88,12 @@ def get_general_embeddings( sentences , model_name = "BAAI/bge-small-zh-v1.5" ):
     if model_name not in _model_pool:
         from transformers import AutoTokenizer, AutoModel
         _tokenizer_pool[model_name] = AutoTokenizer.from_pretrained(model_name)
-        _model_pool[model_name] = AutoModel.from_pretrained(model_name)
+        _model_pool[model_name] = AutoModel.from_pretrained(model_name).to(device)
 
     _model_pool[model_name].eval()
 
     # Tokenize sentences
-    encoded_input = _tokenizer_pool[model_name](sentences, padding=True, truncation=True, return_tensors='pt', max_length = 512)
+    encoded_input = _tokenizer_pool[model_name](sentences, padding=True, truncation=True, return_tensors='pt', max_length = 512).to(device)
 
     # Compute token embeddings
     with torch.no_grad():
