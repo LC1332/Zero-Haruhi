@@ -57,3 +57,17 @@ def base64_to_float_array(base64_data):
         float_array.append(num)
 
     return float_array
+
+def load_datas_from_jsonl( file_path ):
+    import json
+    datas = []
+    with open(file_path, 'r', encoding = 'utf-8') as f:
+        for line in f:
+            datas.append(json.loads(line))
+    return datas
+
+def save_datas_to_jsonl( file_path, datas ):
+    import json
+    with open(file_path, 'w', encoding = 'utf-8') as f:
+        for data in datas:
+            f.write(json.dumps(data, ensure_ascii=False) + '\n')

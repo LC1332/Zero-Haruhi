@@ -1,17 +1,32 @@
-def tiktoken_counter( text ):
-    # TODO 把这个实现为tiktoken 然后放到util
-    return len(text)
+from .utils import base64_to_float_array, base64_to_string
 
 def get_text_from_data( data ):
     if "text" in data:
         return data['text']
     elif "enc_text" in data:
         # from .utils import base64_to_string
-        from .utils import base64_to_string
         return base64_to_string( data['enc_text'] )
     else:
         print("warning! failed to get text from data ", data)
         return ""
+
+def parse_rag(text):
+    lines = text.split("\n")
+    ans = []
+
+    for i, line in enumerate(lines):
+        if "{{RAG对话}}" in line:
+            ans.append({"n": 1, "max_token": -1, "query": "default", "lid": i})
+        elif "{{RAG对话|" in line:
+            query_info = line.split("|")[1].rstrip("}}")
+            ans.append({"n": 1, "max_token": -1, "query": query_info, "lid": i})
+        elif "{{RAG多对话|" in line:
+            parts = line.split("|")
+            max_token = int(parts[1].split("<=")[1])
+            max_n = int(parts[2].split("<=")[1].rstrip("}}"))
+            ans.append({"n": max_n, "max_token": max_token, "query": "default", "lid": i})
+            
+    return ans
 
 class ChatHaruhi:
     def __init__(self,
@@ -30,7 +45,9 @@ class ChatHaruhi:
                  embedding = None,
                  db = None,
                  token_counter = "default",
-                 max_input_token = 1800
+                 max_input_token = 1800,
+                 max_len_story_haruhi = 1000,
+                 max_story_n_haruhi = 5
                  ):
 
         self.verbose = True if verbose is None or verbose else False
@@ -38,6 +55,11 @@ class ChatHaruhi:
         self.db = db
 
         self.embed_name = embed_name
+
+        self.max_len_story_haruhi = max_len_story_haruhi # 这个设置只对过往Haruhi的sugar角色有效
+        self.max_story_n_haruhi = max_story_n_haruhi # 这个设置只对过往Haruhi的sugar角色有效
+
+        self.last_msg = None
 
         if embedding is None:
             self.embedding = self.set_embedding_with_name( embed_name )
@@ -75,7 +97,9 @@ class ChatHaruhi:
             self.db = None
         elif role_name and self.check_sugar( role_name ):
             # 这个时候是sugar的role
-            self.persona, self.role_name, self.user_name, self.db = self.load_role_from_sugar( role_name )
+            self.persona, self.role_name, self.stories, self.story_vecs = self.load_role_from_sugar( role_name )
+            self.build_db(self.stories, self.story_vecs)
+            self.add_rag_prompt_after_persona()
         else:
             raise ValueError("persona和role_name必须同时设置，或者role_name是ChatHaruhi的预设人物")
 
@@ -91,6 +115,7 @@ class ChatHaruhi:
 
         if token_counter.lower() == "default":
             # TODO change load from util
+            from .utils import tiktoken_counter
             self.token_counter = tiktoken_counter
         elif token_counter == None:
             self.token_counter = lambda x: 0
@@ -104,7 +129,7 @@ class ChatHaruhi:
         self.history = []
 
     def check_sugar(self, role_name):
-        from .sugar_map import sugar_role_names
+        from .sugar_map import sugar_role_names, enname2zhname
         return role_name in sugar_role_names
 
     def load_role_from_sugar(self, role_name):
@@ -113,15 +138,21 @@ class ChatHaruhi:
         new_role_name = enname2zhname[en_role_name]
         role_from_hf = "silk-road/ChatHaruhi-RolePlaying/" + en_role_name
         persona, _, stories, story_vecs = self.load_role_from_hf(role_from_hf)
+
         return persona, new_role_name, stories, story_vecs
 
+    def add_rag_prompt_after_persona( self ):
+        rag_sentence = "{{RAG多对话|token<=" + str(self.max_len_story_haruhi) + "|n<=" + str(self.max_story_n_haruhi) + "}}"
+        self.persona += "Classic scenes for the role are as follows:\n" + rag_sentence
+
     def set_embedding_with_name(self, embed_name):
-        if embed_name is None or embed_name == "foo":
+        if embed_name is None or embed_name == "bge_zh":
+            from .embeddings import get_bge_zh_embedding
+            self.embed_name = "bge_zh"
+            return get_bge_zh_embedding
+        elif embed_name == "foo":
             from .embeddings import foo_embedding
             return foo_embedding
-        elif embed_name == "bge-zh":
-            from .embeddings import foo_bge_zh_15
-            return foo_bge_zh_15
         elif embed_name == "bce":
             from .embeddings import foo_bce
             return foo_bce
@@ -154,15 +185,21 @@ class ChatHaruhi:
             self.append_message(response)
             return self.llm_async(message)
 
-    def parse_rag_from_persona(self, persona):
+    def parse_rag_from_persona(self, persona, text = None):
         #每个query_rag需要饱含
         # "n" 需要几个story
         # "max_token" 最多允许多少个token，如果-1则不限制
         # "query" 需要查询的内容，如果等同于"default"则替换为text
         # "lid" 需要替换的行，这里直接进行行替换，忽视行的其他内容
 
-        print("parse_rag_from_persona")
-        return [], self.token_counter(persona)
+        query_rags = parse_rag( persona )
+
+        if text is not None:
+            for rag in query_rags:
+                if rag['query'] == "default":
+                    rag['query'] = text
+
+        return query_rags, self.token_counter(persona)
 
     def append_message( self, response , speaker = None ):
         if speaker is None:
@@ -172,10 +209,42 @@ class ChatHaruhi:
         else:
             self.history.append({"speaker":speaker,"content":response})
 
+    def check_recompute_stories_token(self):
+        return len(self.db.metas) == len(self.db.stories)
+    
+    def recompute_stories_token(self):
+        self.db.metas = [self.token_counter(story) for story in self.db.stories]
+
     def rag_retrieve( self, query, n, max_token, avoid_ids = [] ):
         # 返回一个rag_id的列表
-        print("call rag_retrieve")
-        return []
+        query_vec = self.embedding(query)
+
+        self.db.clean_flag()
+        self.db.disable_story_with_ids( avoid_ids )
+        
+        retrieved_ids = self.db.search( query_vec, n )
+
+        if self.check_recompute_stories_token():
+            self.recompute_stories_token()
+
+        sum_token = 0
+
+        ans = []
+
+        for i in range(0, len(retrieved_ids)):
+            if i == 0:
+                sum_token += self.db.metas[retrieved_ids[i]]
+                ans.append(retrieved_ids[i])
+                continue
+            else:
+                sum_token += self.db.metas[retrieved_ids[i]]
+                if sum_token <= max_token:
+                    ans.append(retrieved_ids[i])
+                else:
+                    break
+                
+        return ans
+
 
     def rag_retrieve_all( self, query_rags, rest_limit ):
         # 返回一个rag_ids的列表
@@ -197,7 +266,7 @@ class ChatHaruhi:
 
     def append_history_under_limit(self, message, rest_limit):
         # 返回一个messages的列表
-        print("call append_history_under_limit")
+        # print("call append_history_under_limit")
 
         # 从后往前计算token，不超过rest_limit,
         # 如果speaker是{{role}},则message的role是assistant
@@ -208,14 +277,19 @@ class ChatHaruhi:
         query_token = self.token_counter(text)
 
         # 首先获取需要多少个rag story
-        query_rags, persona_token = self.parse_rag_from_persona( self.persona )
+        query_rags, persona_token = self.parse_rag_from_persona( self.persona, text )
         #每个query_rag需要饱含
         # "n" 需要几个story
         # "max_token" 最多允许多少个token，如果-1则不限制
         # "query" 需要查询的内容，如果等同于"default"则替换为text
         # "lid" 需要替换的行，这里直接进行行替换，忽视行的其他内容
 
+        
+
         rest_limit = self.max_input_token - persona_token - query_token
+
+        if self.verbose:
+            print(f"query_rags: {query_rags} rest_limit = { rest_limit }")
 
         rag_ids = self.rag_retrieve_all( query_rags, rest_limit )
 
@@ -232,7 +306,8 @@ class ChatHaruhi:
 
         message = self.append_history_under_limit( message, rest_limit )
 
-        message.append({"role":"user","content":text})
+        # message.append({"role":"user","content":text})
+        self.last_msg = {"role":"user","content":text}
 
         return message
 
@@ -250,7 +325,7 @@ You will stay in-character whenever possible, and generate responses as if you w
             lid = query_rag['lid']
             new_text = ""
             for id in rag_id:
-                new_text += "###\n" + self.db.get_text(id) + "\n"
+                new_text += "###\n" + self.db.stories[id].strip() + "\n"
             new_text = new_text.strip()
             lines[lid] = new_text
         return "\n".join(lines)
@@ -269,7 +344,8 @@ You will stay in-character whenever possible, and generate responses as if you w
 
         column_name = ""
 
-        from .utils import embedname2columnname
+        from .embeddings import embedname2columnname
+
         if self.embed_name in embedname2columnname:
             column_name = embedname2columnname[self.embed_name]
         else:
@@ -277,7 +353,7 @@ You will stay in-character whenever possible, and generate responses as if you w
             column_name = 'luotuo_openai'
 
         stories, story_vecs, persona = self.extract_text_vec_from_datas(datas, column_name)
-        
+
         return persona, None, stories, story_vecs
 
 
@@ -291,18 +367,19 @@ You will stay in-character whenever possible, and generate responses as if you w
             dataset = load_dataset(role_from_hf)
             datas = dataset["train"]
         elif role_from_hf.count("/") >= 2:
-            split_index = role_from_hf.index('/') 
+            split_index = role_from_hf.index('/')
             second_split_index = role_from_hf.index('/', split_index+1)
-            dataset_name = role_from_hf[:second_split_index] 
+            dataset_name = role_from_hf[:second_split_index]
             split_name = role_from_hf[second_split_index+1:]
-            
+
             fname = split_name + '.jsonl'
             dataset = load_dataset(dataset_name,data_files={'train':fname})
             datas = dataset["train"]
 
         column_name = ""
 
-        from .utils import embedname2columnname
+        from .embeddings import embedname2columnname
+
         if self.embed_name in embedname2columnname:
             column_name = embedname2columnname[self.embed_name]
         else:
@@ -327,7 +404,6 @@ You will stay in-character whenever possible, and generate responses as if you w
             elif data[column_name] == 'config':
                 pass
             else:
-                from .utils import base64_to_float_array
                 vec = base64_to_float_array( data[column_name] )
                 text = get_text_from_data( data )
                 vecs.append( vec )
@@ -357,3 +433,4 @@ You will stay in-character whenever possible, and generate responses as if you w
             from .NaiveDB import NaiveDB
             self.db = NaiveDB()
         self.db.build_db(stories, story_vecs)
+
