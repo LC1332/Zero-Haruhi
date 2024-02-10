@@ -1,0 +1,2 @@
+
+from .ChatHaruhi import ChatHaruhi
