@@ -1,5 +1,18 @@
 import random
 
+# elif embedding == 'bge_en':
+#                 embed_name = 'bge_en_s15'
+#             elif embedding == 'bge_zh':
+#                 embed_name = 'bge_zh_s15'
+
+embedname2columnname = {
+    "luotuo_openai":"luotuo_openai",
+    "openai":"luotuo_openai",
+    "bge_zh":"bge_zh_s15",
+    "bge_en":"bge_en_s15",
+    "bce":"bce_base",
+}
+
 # 这是用来调试的foo embedding
 
 def foo_embedding( text ):
