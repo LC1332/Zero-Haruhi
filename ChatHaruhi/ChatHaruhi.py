@@ -204,7 +204,7 @@ class ChatHaruhi:
     def append_message( self, response , speaker = None ):
         if speaker is None:
             # 如果role是none，则认为是本角色{{role}}输出的句子
-            self.history.append({"speaker":"{{user}}","content":response})
+            self.history.append({"speaker":"{{role}}","content":response})
             # 叫speaker是为了和role进行区分
         else:
             self.history.append({"speaker":speaker,"content":response})
