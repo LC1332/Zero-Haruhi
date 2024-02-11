@@ -10,6 +10,10 @@ import torch
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+embedshortname2model_name = {
+    "bge_zh":"BAAI/bge-small-zh-v1.5",
+}
+
 embedname2columnname = {
     "luotuo_openai":"luotuo_openai",
     "openai":"luotuo_openai",

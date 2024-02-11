@@ -143,7 +143,7 @@ class ChatHaruhi:
 
     def add_rag_prompt_after_persona( self ):
         rag_sentence = "{{RAG多对话|token<=" + str(self.max_len_story_haruhi) + "|n<=" + str(self.max_story_n_haruhi) + "}}"
-        self.persona += "Classic scenes for the role are as follows:\n" + rag_sentence
+        self.persona += "Classic scenes for the role are as follows:\n" + rag_sentence + "\n"
 
     def set_embedding_with_name(self, embed_name):
         if embed_name is None or embed_name == "bge_zh":
@@ -333,7 +333,7 @@ class ChatHaruhi:
         # TODO: 之后为了解决多人对话，这了content还会额外增加speaker: content这样的信息
 
         message.append({"role":"user","content":text})
-        
+
         self.last_query_msg = {"speaker":user,"content":text}
 
         return message
@@ -446,11 +446,23 @@ You will stay in-character whenever possible, and generate responses as if you w
 
         if self.verbose:
             print(f"re-extract vector for {len(stories)} stories")
-
-        from tqdm import tqdm
+        
         story_vecs = []
-        for story in tqdm(stories):
-            story_vecs.append(self.embedding(story))
+
+        from .embeddings import embedshortname2model_name
+        from .embeddings import device
+
+        if device.type != "cpu" and self.embed_name in embedshortname2model_name:
+            # model_name = "BAAI/bge-small-zh-v1.5"
+            model_name = embedshortname2model_name[self.embed_name]
+
+            from .utils import get_general_embeddings_safe
+            story_vecs = get_general_embeddings_safe( stories, model_name = model_name )
+            # 使用batch的方式进行embedding，非常快
+        else:
+            from tqdm import tqdm
+            for story in tqdm(stories):
+                story_vecs.append(self.embedding(story))
 
         return story_vecs
 
