@@ -287,11 +287,13 @@ class ChatHaruhi:
 
         history_list = list(reversed(history_list))
 
+        # TODO: 之后为了解决多人对话，这了content还会额外增加speaker: content这样的信息
+
         for item in history_list:
             if item['speaker'] == "{{role}}":
                 message.append({"role":"assistant","content":item['content']})
             else:
-                message.append({"role":item['speaker'],"content":item['content']})
+                message.append({"role":"user","content":item['content']})
         
         return message
 
@@ -329,6 +331,9 @@ class ChatHaruhi:
         message = self.append_history_under_limit( message, rest_limit )
 
         # message.append({"role":"user","content":text})
+
+        # TODO: 之后为了解决多人对话，这了content还会额外增加speaker: content这样的信息
+        
         self.last_query_msg = {"speaker":user,"content":text}
 
         return message
