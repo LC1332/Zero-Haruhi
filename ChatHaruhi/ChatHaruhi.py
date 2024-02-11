@@ -183,7 +183,7 @@ class ChatHaruhi:
         if self.llm_async:
             response = await self.llm_async(message)
             self.append_message(response)
-            return self.llm_async(message)
+            return response
 
     def parse_rag_from_persona(self, persona, text = None):
         #每个query_rag需要饱含
