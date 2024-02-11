@@ -330,9 +330,9 @@ class ChatHaruhi:
 
         message = self.append_history_under_limit( message, rest_limit )
 
-        # message.append({"role":"user","content":text})
-
         # TODO: 之后为了解决多人对话，这了content还会额外增加speaker: content这样的信息
+
+        message.append({"role":"user","content":text})
         
         self.last_query_msg = {"speaker":user,"content":text}
 
