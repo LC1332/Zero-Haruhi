@@ -266,24 +266,30 @@ class ChatHaruhi:
 
     def append_history_under_limit(self, message, rest_limit):
         # 返回一个messages的列表
-        print("call append_history_under_limit")
-        # 从后往前计算token，不超过rest_limit,
-        # 如果speaker是{{role}},则message的role是assistant
-        def calculate_tokenized_length(text):
-            if text == None:
-                return 0
-            tokens = tokenizer.encode(text)
-            return len(tokens)
-        total_length = 0
-        result = []
-        for item in reversed(chatbot[:]):
-            total_length += calculate_tokenized_length(item)
-            if total_length <= rest_limit :
-                result.append(item)
-            else:
+        # print("call append history_under_limit")
+        # 从后往前计算token，不超过rest limit，
+        # 如果speaker是{{role}J,则message的role是assistant
+        current_limit = rest_limit
+
+        history_list = []
+
+        for item in reversed(self.history):
+            current_token = self.token_counter(item['content'])
+            current_limit -= current_token
+            if current_limit < 0:
                 break
-        # result.append(chatbot[0])
-        return list(reversed(result))
+            else:
+                history_list.append(item)
+
+        history_list = list(reversed(history_list))
+
+        for item in history_list:
+            if item['speaker'] == "{{role}}":
+                message.append({"role":"assistant","content":item['content']})
+            else:
+                message.append({"role":item['speaker'],"content":item['content']})
+        
+        return message
 
     def get_message(self, user, text):
         query_token = self.token_counter(text)
