@@ -59,7 +59,7 @@ class ChatHaruhi:
         self.max_len_story_haruhi = max_len_story_haruhi # 这个设置只对过往Haruhi的sugar角色有效
         self.max_story_n_haruhi = max_story_n_haruhi # 这个设置只对过往Haruhi的sugar角色有效
 
-        self.last_msg = None
+        self.last_query_msg = None
 
         if embedding is None:
             self.embedding = self.set_embedding_with_name( embed_name )
@@ -202,6 +202,10 @@ class ChatHaruhi:
         return query_rags, self.token_counter(persona)
 
     def append_message( self, response , speaker = None ):
+        if self.last_query_msg is not None:
+            self.history.append(self.last_query_msg)
+            self.last_query_msg = None
+
         if speaker is None:
             # 如果role是none，则认为是本角色{{role}}输出的句子
             self.history.append({"speaker":"{{role}}","content":response})
@@ -325,7 +329,7 @@ class ChatHaruhi:
         message = self.append_history_under_limit( message, rest_limit )
 
         # message.append({"role":"user","content":text})
-        self.last_msg = {"role":"user","content":text}
+        self.last_query_msg = {"role":user,"content":text}
 
         return message
 
