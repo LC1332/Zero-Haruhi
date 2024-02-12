@@ -1,3 +1,58 @@
+# Chat凉宫春日 Chat-Haruhi-Suzumiya
+## Reviving Anime Character in Reality via Large Language Model
+
+**Chat凉宫春日**是模仿凉宫春日等一系列动漫人物，使用近似语气、个性和剧情聊天的语言模型方案。
+
+随着[**凉宫春日-Zero**](https://github.com/LC1332/Zero-Haruhi)模型的建立，Chat凉宫春日项目将主要包含三个部分，
+
+1. 可以接入不同语言模型，包括闭源商用API和Haruhi-Zero模型的推理class，用于管理人物的记忆库和过往的历史信息并进行prompt的构造。
+2. 使用120k左右量级对话数据得到的开源角色扮演模型，凉宫春日-Zero，方便每个开发者构建自己的人物模型
+3. 完整的小说抽取方案，以及一个开源可本地部署的对话-动作抽取模型。
+
+
+<p align="center">
+    <img src="https://github.com/LC1332/Chat-Haruhi-Suzumiya/blob/main/figures/datasetOverview.png">
+</p>
+
+<details>
+  <summary> Chat凉宫春日的2.0版本由李鲁鲁, 冷子昂, 闫晨曦, 封小洋, scixing, 沈骏一, Aria Fei, 王皓, 米唯实, 冷月, JunityZhan, 贾曜恺, 吴平宇, 孙浩甄等开发。 </summary>
+
+本项目是一个开源项目，项目成员均在DataWhale等开源社区招募。
+
+李鲁鲁( [Cheng Li@SenseTime](https://github.com/LC1332) )发起了整个项目,并设计和实现了项目的大多数功能。
+
+冷子昂( [Ziang Leng@SenseTime](https://blairleng.github.io) )设计和实现了整体的ChatHaruhi1.0的训练,数据生成和后端架构。
+
+闫晨曦( [Chenxi Yan@Chengdu University of Information Technology](https://github.com/todochenxi) )实现和维护了ChatHaruhi1.0版本的后端。
+
+沈骏一( [Junyi Shen@Zhejiang University](https://github.com/J1shen) )实现了训练代码,参与了训练数据集生成。
+
+王皓( [Hao Wang](https://github.com/wanghao07456) )收集了武林外传的台本数据,参与了增广数据的生成。
+
+米唯实( [Weishi MI@Tsinghua University](https://github.com/hhhwmws0117) )参与了增广数据生成。
+
+Yaying Fei( [Aria Fei@Beijing University of Technology](https://ariafyy.github.io/) )实现了台本工具 ASR 功能,参与了Openness-Aware Personality paper分支项目。
+
+封小洋( [Xiaoyang Feng@Nanjing Agricultural University](https://github.com/fengyunzaidushi) )整合了台本识别工具功能,参与了Openness-Aware Personality paper分支项目。
+
+冷月( [Song Yan](https://github.com/zealot52099) )收集了big bang thoery的数据。实现了台本格式转换功能。
+
+scixing(汪好盛)( [HaoSheng Wang](https://github.com/ssccinng) )实现了台本工具中声纹识别功能,以及tts-vits语音合成功能。
+
+Linkang Zhan( [JunityZhan@Case Western Reserve University](https://github.com/JunityZhan) ) 收集了原神的system prompt和故事数据。
+
+贾曜恺( [Yaokai Jia](https://github.com/KaiJiaBrother) )实现了Vue版本的前端,并且在心理项目中实践了Bert的GPU抽取。
+
+吴平宇( [Pingyu Wu@Juncai Shuyun](https://github.com/wpydcr) )帮助部署了第一版本的训练代码。
+
+孙浩甄( [Haozhen Sun@Tianjin University] )绘制了ChatHaruhi角色的拼图。
+
+</details>
+
+Chat凉宫春日3.0由李鲁鲁, 刘崇寒, 豆角, 米唯实等开发，正在开发中。详情见Contributors
+
+---
+
 # 凉宫春日-Zero
 # Haruhi-Zero: Zero-Shot Role-Playing Model
 
@@ -16,7 +71,7 @@
 项目的目标
 
 - [x] 一个通用的，同时支持Zero-shot和RAG角色构造的角色扮演模型
-- [ ] ChatHaruhi 3.0的inference class，能够将角色卡片等形式转化为message，再对接Haruhi-Zero模型或者api进行inference
+- [x] ChatHaruhi 3.0的inference class，能够将角色卡片等形式转化为message，再对接Haruhi-Zero模型或者api进行inference
 - [ ] 支持原来Haruhi的角色卡片，以及30本新小说的抽取的角色，使用中英文通用的embedding，相比于pygmalion模型，增加动态rag的角色卡片
 - [ ] Haruhi-Zero的模型接入Silly Travern生态
 - [ ] 训练各个尺寸的模型，并且进行合适的量化，使得一些免费的云服务机以及本地显卡可以进行运行
