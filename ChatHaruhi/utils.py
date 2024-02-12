@@ -2,6 +2,22 @@ import tiktoken
 
 _enc_model = None
 
+def normalize2uaua( message, if_replace_system = False ):
+    new_message = []
+    last_role = ""
+
+    for msg in message:
+        role = msg["role"]
+        if if_replace_system and role == "system":
+            role = "user"
+        
+        if last_role == role:
+            new_message[-1]["content"] = new_message[-1]["content"] + "\n" + msg["content"]
+        else:
+            last_role = role
+            new_message.append( msg )
+
+    return new_message
 
 def tiktoken_counter( text ):
     global _enc_model
