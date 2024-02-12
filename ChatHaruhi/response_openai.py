@@ -38,7 +38,7 @@ def get_response( message ):
 from openai import AsyncOpenAI
 
 def init_aclient():
-    # 将client设置为全局变量，以便在其他函数中使用
+    # 将aclient设置为全局变量，以便在其他函数中使用
     global aclient
 
     # 检查是否存在API_KEY环境变量
