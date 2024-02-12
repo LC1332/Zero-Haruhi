@@ -12,7 +12,7 @@ def normalize2uaua( message, if_replace_system = False ):
             role = "user"
         
         if last_role == role:
-            new_message[-1]["content"] = new_message[-1]["content"] + msg["content"]
+            new_message[-1]["content"] = new_message[-1]["content"] + "\n" + msg["content"]
         else:
             last_role = role
             new_message.append( msg )
