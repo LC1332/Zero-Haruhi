@@ -17,6 +17,7 @@ def init_client():
     if api_key is None:
         raise ValueError("环境变量'ZHIPUAI_API_KEY'未设置，请确保已经定义了API密钥")
 
+ 
 def init_aclient():
     
     # 将aclient设置为全局变量
@@ -26,8 +27,17 @@ def init_aclient():
     api_key = os.environ("ZHIPUAI_API_KEY")
     if api_key is None:
         raise ValueError("环境变量'ZHIPUAI_API_KEY'未设置，请确保已经定义了API密钥")
-    
-    # 异步调用
+
+def get_response( message ):
+    if client is None:
+        init_client()
+    response = client.chat.completions.create(\
+        model="glm-4",\
+        messages = message, \
+        max_tokens = 300, \
+        temperature = 0.1 )
+    return response.choices[0].message.content
+
 
 
 
