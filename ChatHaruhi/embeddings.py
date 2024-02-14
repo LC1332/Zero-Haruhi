@@ -73,7 +73,6 @@ def foo_bce( text ):
     tokenizer = AutoTokenizer.from_pretrained('maidalun1020/bce-embedding-base_v1')
     model = AutoModel.from_pretrained('maidalun1020/bce-embedding-base_v1')
     
-    device = 'cpu' 
     model.to(device)
     
     # get inputs
