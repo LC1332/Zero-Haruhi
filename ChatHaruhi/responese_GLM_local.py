@@ -37,7 +37,7 @@ def init_client(model_name, verbose):
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
         client = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
-    except LocalEntryNotFoundError:
+    except Exception:
         if pretrained_model_download(model_name, verbose=verbose):
             tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
             client = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
