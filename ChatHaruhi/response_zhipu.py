@@ -28,11 +28,11 @@ def init_aclient():
     if api_key is None:
         raise ValueError("环境变量'ZHIPUAI_API_KEY'未设置，请确保已经定义了API密钥")
 
-def get_response( message ):
+def get_response( message, model_name = "glm-3-turbo" ):
     if client is None:
         init_client()
     response = client.chat.completions.create(\
-        model="glm-4",\
+        model=model_name,\
         messages = message, \
         max_tokens = 300, \
         temperature = 0.1 )
