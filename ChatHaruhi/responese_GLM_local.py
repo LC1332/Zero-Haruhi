@@ -27,34 +27,59 @@ def init_client(model_name):
 
     device = torch.device("cpu") if device is None else device
 
+    if not pretrained_model_download(model_name):
+        raise Exception("Pretrained model download fail")
+
     print("Using device: ", device)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, mirror=END_POINT,
-                                              output_loading_info=True)
-    client = (AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True, mirror=END_POINT,
-                                                   output_loading_info=True).to(device).eval())
+    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, output_loading_info=True)
+    client = (AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True, output_loading_info=True).to(
+        device).eval())
 
 
-def pretrained_model_download(model_name_or_path):
-    # TODO 使用hf加速下载 未测试
-    os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+def pretrained_model_download(model_name_or_path: str) -> bool:
+    """
+        使用huggingface_hub下载模型（model_name_or_path）。下载成功返回true，失败返回False。
+    :param model_name_or_path: 模型的huggingface地址
+    :return: bool
+    """
+    # TODO 使用hf镜像加速下载 未测试linux、windows端
 
+    # 判断平台（windows 未测试安装hf_transfer）
+    # m2 mac无法便捷安装hf_transfer，因此在mac上暂时不使用 hf_transfer
+    use_hf_transfer = False
+    import platform
+    system = platform.system()
+    if system == "Linux":
+        use_hf_transfer = True
+    if use_hf_transfer:
+        try:
+            import hf_transfer
+        except ImportError:
+            print("Install hf_transfer.")
+            os.system("pip -q install hf_transfer")
+            import hf_transfer
+
+        # 启用hf_transfer
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
+        print("export HF_HUB_ENABLE_HF_TRANSFER=", os.getenv("HF_HUB_ENABLE_HF_TRANSFER"))
+
+    # 尝试引入huggingface_hub
     try:
         import huggingface_hub
     except ImportError:
         print("Install huggingface_hub.")
-        os.system("pip -q install -U huggingface_hub")
-    try:
-        import hf_transfer
-    except ImportError:
-        print("Install hf_transfer.")
-        os.system("pip -q install -U hf-transfer -i https://pypi.org/simple")
-        # Enable hf-transfer if specified
-    os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
-    print("export HF_HUB_ENABLE_HF_TRANSFER=", os.getenv("HF_HUB_ENABLE_HF_TRANSFER"))
+        os.system("pip -q install huggingface_hub")
+        import huggingface_hub
 
-    download_shell = f"huggingface-cli download --local-dir-use-symlinks False --resume-download {model_name_or_path}"
-    os.system(download_shell)
+    # 使用huggingface_hub下载模型。
+    try:
+        print(f"downloading {model_name_or_path}")
+        huggingface_hub.snapshot_download(repo_id=model_name_or_path, endpoint=END_POINT)
+    except Exception as e:
+        raise e
+
+    return True
 
 
 def get_response(message, model_name="THUDM/chatglm3-6b"):
