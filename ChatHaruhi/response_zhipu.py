@@ -16,6 +16,8 @@ def init_client():
     api_key = os.getenv("ZHIPUAI_API_KEY")
     if api_key is None:
         raise ValueError("环境变量'ZHIPUAI_API_KEY'未设置，请确保已经定义了API密钥")
+    
+    client = ZhipuAI(api_key=api_key)
 
  
 def init_aclient():
