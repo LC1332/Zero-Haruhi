@@ -35,12 +35,16 @@ def init_client(model_name, verbose):
     # TODO 考虑支持deepspeed 进行多gpu推理，以及zero
 
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
-        client = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True, local_files_only=True)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, trust_remote_code=True, local_files_only=True)
+        client = AutoModelForCausalLM.from_pretrained(
+            model_name, trust_remote_code=True, local_files_only=True)
     except Exception:
         if pretrained_model_download(model_name, verbose=verbose):
-            tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-            client = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name, trust_remote_code=True)
+            client = AutoModelForCausalLM.from_pretrained(
+                model_name, trust_remote_code=True)
 
     client = client.to(device).eval()
 
@@ -54,23 +58,14 @@ def pretrained_model_download(model_name_or_path: str, verbose) -> bool:
     # TODO 使用hf镜像加速下载 未测试linux、windows端
     # 判断平台（windows 未测试安装hf_transfer）
     # m2 mac无法便捷安装hf_transfer，因此在mac上暂时不使用 hf_transfer
-    use_hf_transfer = False
     import platform
-    system = platform.system()
-    if system == "Linux":
-        use_hf_transfer = True
-    if use_hf_transfer:
+    if os.getenv("HF_HUB_ENABLE_HF_TRANSFER") == 1:
         try:
             import hf_transfer
         except ImportError:
             print("Install hf_transfer.")
             os.system("pip -q install hf_transfer")
             import hf_transfer
-
-        # 启用hf_transfer
-        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
-        if verbose:
-            print("export HF_HUB_ENABLE_HF_TRANSFER=", os.getenv("HF_HUB_ENABLE_HF_TRANSFER"))
 
     # 尝试引入huggingface_hub
     try:
@@ -83,7 +78,8 @@ def pretrained_model_download(model_name_or_path: str, verbose) -> bool:
     # 使用huggingface_hub下载模型。
     try:
         print(f"downloading {model_name_or_path}")
-        huggingface_hub.snapshot_download(repo_id=model_name_or_path, endpoint=END_POINT)
+        huggingface_hub.snapshot_download(
+            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True)
     except Exception as e:
         raise e
 
