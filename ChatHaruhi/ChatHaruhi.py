@@ -358,8 +358,6 @@ You will stay in-character whenever possible, and generate responses as if you w
         return "\n".join(lines)
 
     def load_role_from_jsonl( self, role_from_jsonl ):
-        if self.verbose:
-            print(f"因为懒得测试，jsonl的分支还没有测试，当你使用的时候如果通过了，请告诉鲁叔测试通过了")
         import json
         datas = []
         with open(role_from_jsonl, 'r') as f:
@@ -436,10 +434,6 @@ You will stay in-character whenever possible, and generate responses as if you w
                 vecs.append( vec )
                 texts.append( text )
         return texts, vecs, system_prompt
-
-    def load_role_from_jsonl(self, role_from_jsonl):
-        # 从jsonl加载role
-        return None
 
     def extract_story_vecs(self, stories):
         # 从stories中提取story_vecs
