@@ -175,7 +175,8 @@ class ChatHaruhi:
         if self.llm:
             response = self.llm(message)
             self.append_message(response)
-            return self.llm(message)
+            return response
+        return None
 
     async def async_chat(self, user, text):
         self.set_new_user(user)
