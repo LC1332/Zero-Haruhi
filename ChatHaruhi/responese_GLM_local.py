@@ -15,19 +15,21 @@ END_POINT = "https://hf-mirror.com"
 
 
 def init_client(model_name, verbose):
+    """
+        初始化模型，通过可用的设备进行模型加载推理。
+    """
+
     # 将client设置为全局变量
     global client
     global tokenizer
 
-    device = None
-
     # 判断 使用MPS、CUDA、CPU运行模型
     if torch.cuda.is_available():
         device = torch.device("cuda")
-    if torch.backends.mps.is_available():
+    elif torch.backends.mps.is_available():
         device = torch.device("mps")
-
-    device = torch.device("cpu") if device is None else device
+    else:
+        device = torch.device("cpu")
 
     if verbose:
         print("Using device: ", device)
@@ -42,9 +44,9 @@ def init_client(model_name, verbose):
     except Exception:
         if pretrained_model_download(model_name, verbose=verbose):
             tokenizer = AutoTokenizer.from_pretrained(
-                model_name, trust_remote_code=True)
+                model_name, trust_remote_code=True, local_files_only=True)
             client = AutoModelForCausalLM.from_pretrained(
-                model_name, trust_remote_code=True)
+                model_name, trust_remote_code=True, local_files_only=True)
 
     client = client.to(device).eval()
 
@@ -110,6 +112,6 @@ def get_response(message, model_name="THUDM/chatglm3-6b", verbose=False):
         print(message)
         print(message2query(message))
 
-    response = client.chat(tokenizer, message2query(message))
+    response, history = client.chat(tokenizer, message2query(message))
 
     return response
