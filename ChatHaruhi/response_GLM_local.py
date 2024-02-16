@@ -3,7 +3,6 @@ from string import Template
 from typing import List, Dict
 
 import torch.cuda
-from huggingface_hub.utils import LocalEntryNotFoundError
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 aclient = None
@@ -14,9 +13,13 @@ tokenizer = None
 END_POINT = "https://hf-mirror.com"
 
 
-def init_client(model_name, verbose):
+def init_client(model_name: str, verbose: bool) -> None:
     """
         初始化模型，通过可用的设备进行模型加载推理。
+
+        Params:
+            model_name (`str`)
+                HuggingFace中的模型项目名，例如"THUDM/chatglm3-6b"
     """
 
     # 将client设置为全局变量
@@ -51,16 +54,17 @@ def init_client(model_name, verbose):
     client = client.to(device).eval()
 
 
-def pretrained_model_download(model_name_or_path: str, verbose) -> bool:
+def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
     """
         使用huggingface_hub下载模型（model_name_or_path）。下载成功返回true，失败返回False。
-    :param model_name_or_path: 模型的huggingface地址
-    :return: bool
+        Params: 
+            model_name_or_path (`str`): 模型的huggingface地址
+        Returns:
+            `bool` 是否下载成功
     """
-    # TODO 使用hf镜像加速下载 未测试linux、windows端
-    # 判断平台（windows 未测试安装hf_transfer）
-    # m2 mac无法便捷安装hf_transfer，因此在mac上暂时不使用 hf_transfer
-    import platform
+    # TODO 使用hf镜像加速下载 未测试windows端
+
+    # 判断是否使用HF_transfer，默认不使用。
     if os.getenv("HF_HUB_ENABLE_HF_TRANSFER") == 1:
         try:
             import hf_transfer
@@ -101,7 +105,7 @@ def message2query(messages: List[Dict[str, str]]) -> str:
     return "".join([template.substitute(message) for message in messages])
 
 
-def get_response(message, model_name="THUDM/chatglm3-6b", verbose=False):
+def get_response(message, model_name: str = "THUDM/chatglm3-6b", verbose: bool = False):
     global client
     global tokenizer
 
