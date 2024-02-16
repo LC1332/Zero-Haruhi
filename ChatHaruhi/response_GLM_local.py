@@ -3,7 +3,6 @@ from string import Template
 from typing import List, Dict
 
 import torch.cuda
-from huggingface_hub.utils import LocalEntryNotFoundError
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 aclient = None
@@ -14,20 +13,26 @@ tokenizer = None
 END_POINT = "https://hf-mirror.com"
 
 
-def init_client(model_name, verbose):
+def init_client(model_name: str, verbose: bool) -> None:
+    """
+        初始化模型，通过可用的设备进行模型加载推理。
+
+        Params:
+            model_name (`str`)
+                HuggingFace中的模型项目名，例如"THUDM/chatglm3-6b"
+    """
+
     # 将client设置为全局变量
     global client
     global tokenizer
 
-    device = None
-
     # 判断 使用MPS、CUDA、CPU运行模型
     if torch.cuda.is_available():
         device = torch.device("cuda")
-    if torch.backends.mps.is_available():
+    elif torch.backends.mps.is_available():
         device = torch.device("mps")
-
-    device = torch.device("cpu") if device is None else device
+    else:
+        device = torch.device("cpu")
 
     if verbose:
         print("Using device: ", device)
@@ -42,23 +47,24 @@ def init_client(model_name, verbose):
     except Exception:
         if pretrained_model_download(model_name, verbose=verbose):
             tokenizer = AutoTokenizer.from_pretrained(
-                model_name, trust_remote_code=True)
+                model_name, trust_remote_code=True, local_files_only=True)
             client = AutoModelForCausalLM.from_pretrained(
-                model_name, trust_remote_code=True)
+                model_name, trust_remote_code=True, local_files_only=True)
 
     client = client.to(device).eval()
 
 
-def pretrained_model_download(model_name_or_path: str, verbose) -> bool:
+def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
     """
         使用huggingface_hub下载模型（model_name_or_path）。下载成功返回true，失败返回False。
-    :param model_name_or_path: 模型的huggingface地址
-    :return: bool
+        Params: 
+            model_name_or_path (`str`): 模型的huggingface地址
+        Returns:
+            `bool` 是否下载成功
     """
-    # TODO 使用hf镜像加速下载 未测试linux、windows端
-    # 判断平台（windows 未测试安装hf_transfer）
-    # m2 mac无法便捷安装hf_transfer，因此在mac上暂时不使用 hf_transfer
-    import platform
+    # TODO 使用hf镜像加速下载 未测试windows端
+
+    # 判断是否使用HF_transfer，默认不使用。
     if os.getenv("HF_HUB_ENABLE_HF_TRANSFER") == 1:
         try:
             import hf_transfer
@@ -79,7 +85,7 @@ def pretrained_model_download(model_name_or_path: str, verbose) -> bool:
     try:
         print(f"downloading {model_name_or_path}")
         huggingface_hub.snapshot_download(
-            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True)
+            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False)
     except Exception as e:
         raise e
 
@@ -99,7 +105,7 @@ def message2query(messages: List[Dict[str, str]]) -> str:
     return "".join([template.substitute(message) for message in messages])
 
 
-def get_response(message, model_name="THUDM/chatglm3-6b", verbose=False):
+def get_response(message, model_name: str = "THUDM/chatglm3-6b", verbose: bool = False):
     global client
     global tokenizer
 
@@ -110,6 +116,6 @@ def get_response(message, model_name="THUDM/chatglm3-6b", verbose=False):
         print(message)
         print(message2query(message))
 
-    response = client.chat(tokenizer, message2query(message))
+    response, history = client.chat(tokenizer, message2query(message))
 
     return response
