@@ -5,14 +5,21 @@
 
 随着[**凉宫春日-Zero**](https://github.com/LC1332/Zero-Haruhi)模型的建立，Chat凉宫春日项目将主要包含三个部分，
 
-1. 可以接入不同语言模型，包括闭源商用API和Haruhi-Zero模型的推理class，用于管理人物的记忆库和过往的历史信息并进行prompt的构造。
-2. 使用120k左右量级对话数据得到的开源角色扮演模型，凉宫春日-Zero，方便每个开发者构建自己的人物模型
-3. 完整的小说抽取方案，以及一个开源可本地部署的对话-动作抽取模型。
+- 可以接入不同语言模型，包括闭源商用API和Haruhi-Zero模型的推理class，用于管理人物的记忆库和过往的历史信息并进行prompt的构造。
+- 使用120k左右量级对话数据得到的开源角色扮演模型，凉宫春日-Zero，方便每个开发者构建自己的人物模型
+- 完整的小说抽取方案，以及一个开源可本地部署的对话-动作抽取模型。
 
 
 <p align="center">
     <img src="https://github.com/LC1332/Chat-Haruhi-Suzumiya/blob/main/figures/datasetOverview.png">
 </p>
+
+<details>
+  <summary> (TBD) Chat凉宫春日的3.0版本和HaruhiZero模型由李鲁鲁, 豆角, 刘崇寒, 米唯实, BPSK 等开发 </summary>
+
+开发人员持续增加中
+
+</details>
 
 <details>
   <summary> Chat凉宫春日的2.0版本由李鲁鲁, 冷子昂, 闫晨曦, 封小洋, scixing, 沈骏一, Aria Fei, 王皓, 米唯实, 冷月, JunityZhan, 贾曜恺, 吴平宇, 孙浩甄等开发。 </summary>
@@ -50,6 +57,39 @@ Linkang Zhan( [JunityZhan@Case Western Reserve University](https://github.com/Ju
 </details>
 
 Chat凉宫春日3.0由李鲁鲁, 刘崇寒, 豆角, 米唯实等开发，正在开发中。详情见Contributors
+
+# TODO
+
+近期TODO 0215
+
+- Haruhi-Zero 0.5 的数据收集
+  - 0.4已经收集，50本小说，每本10个人物
+  - 每个人根据语料，进一步总结profile，验证profile的有效性，产生0.5的数据 ( @ 鲁叔) 
+- Haruhi-Zero 0.4 训练各个size的模型并上传到hf
+  - 14B qwen已经上传 (@BPSK)
+  - 1.8B还是需要的哈， JiangYH说要训练一个ChatGLM-6B的 (@BPSK @JiangYH)
+- 上传7B抽取模型 (@BPSK)
+- ChatHaruhi3.0接口
+  - 初步openai和GLM已经完成
+  - Le geant 去尝试搭建一些gradio 放到hf上面常驻 （@Le geant )
+  - 其他api ( @ mws )
+- 写模型的Readme( @ 鲁叔) 
+- Haruhi-Zero模型需要接入到oobabooga textUI ( @ JiangYH )
+- Evaluation
+  - 先和xintao讨论下咋搞
+- 阅读Silly Tavern代码，看看哪里方便接入记忆库 ( @ 多人 ) 
+- PIPPA数据翻译
+  - 有初步翻译的版本（未check） check后加入0.5训练集
+- 角色分享网站
+  - ？@Sibo
+
+
+# 资源汇总(临时)
+
+- 0.3 模型（7B） https://huggingface.co/silk-road/Haruhi-Zero-7B-0_3
+- 0.4 模型（14B）https://huggingface.co/silk-road/Haruhi-Zero-14B-0_4
+- 抽取模型 https://huggingface.co/silk-road/Haruhi-dialogue-action-extract-7B
+- 0.4 50本小说的500个人物 https://huggingface.co/datasets/silk-road/50-Chinese-Novel-Characters
 
 ---
 
