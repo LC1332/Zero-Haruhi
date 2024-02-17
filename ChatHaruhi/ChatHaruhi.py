@@ -99,7 +99,8 @@ class ChatHaruhi:
             # 这个时候是sugar的role
             self.persona, self.role_name, self.stories, self.story_vecs = self.load_role_from_sugar( role_name )
             self.build_db(self.stories, self.story_vecs)
-            self.add_rag_prompt_after_persona()
+            # 与 江YH讨论 所有的载入方式都要在外部使用 add_rag_prompt_after_persona() 防止混淆
+            # self.add_rag_prompt_after_persona()
         else:
             raise ValueError("persona和role_name必须同时设置，或者role_name是ChatHaruhi的预设人物")
 

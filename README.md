@@ -83,6 +83,183 @@ Chat凉宫春日3.0由李鲁鲁, 刘崇寒, 豆角, 米唯实等开发，正在�
 - 角色分享网站
   - ？@Sibo
 
+# ChatHaruhi 3.0 的说明
+
+ChatHaruhi 3.0是Chat凉宫春日的推理库
+
+- 支持使用或者不使用RAG的角色的载入
+- 支持直接载入sugar角色，或者从hugging face载入预先设定好的角色
+- 支持用户自建角色
+- 在ChatHaruhi 2.0的基础上做了message和llm的分离，方便接入不同的模型
+
+## 快速开始
+
+目前ChatHaruhi的库本身只需要install datasets和tiktoken。另外你需要准备和你对应希望使用的llm所依赖的库，以openai为例的话需要安装openai的库。
+
+对于ChatHaruhi默认支持的角色，你可以直接使用sugar载入
+
+```python
+from ChatHaruhi import ChatHaruhi
+from ChatHaruhi.openai import get_openai_response
+
+chatbot = ChatHaruhi( role_name = 'haruhi', llm = get_openai_response )
+chatbot.add_rag_prompt_after_persona()
+
+response = chatbot.chat(user = '阿虚', text = '我看新一年的棒球比赛要开始了！我们要去参加吗？')
+```
+
+对于更完整的载入方式，需要设置persona, role_name和stories
+
+```python
+from ChatHaruhi import ChatHaruhi
+from ChatHaruhi.openai import get_openai_response
+
+persona = """每当用户问询一个家庭关系，输出一个相关的家庭关系的逻辑句子
+
+{{RAG对话}}
+{{RAG对话}}
+"""
+
+role_name = "家庭关系机器人"
+
+stories = ["{{user}}:爷爷 {{role}}:爸爸的爸爸是爷爷",
+"{{user}}:奶奶 {{role}}:爸爸的妈妈是奶奶",
+"{{user}}:外公 {{role}}:妈妈的爸爸是外公",
+"{{user}}:外婆 {{role}}:妈妈的妈妈是外婆"]
+
+chatbot = ChatHaruhi( role_name = role_name, persona = persona, llm = get_response ,\
+   llm = get_openai_response )
+# 因为persona已经带了"{{RAG对话}}"，不需要额外运行add_rag_prompt_after_persona()
+
+response = chatbot.chat(user = '', text = '表姐？')
+```
+
+当然，建立角色记忆库对于一般的用户来说是比较困难的，所以自Haruhi-Zero模型之后，我们也用户创建不使用记忆库的角色
+
+```python
+from ChatHaruhi import ChatHaruhi
+from ChatHaruhi.openai import get_openai_response
+
+role_name = "布莱恩"
+persona = "你扮演 德州杀场 中的 布莱恩 布莱恩是一个专注、果断、有责任感的警探，他在调查案件时非常注重细节，对案件的解决充满使命感。 布莱恩是一个专注、果断、有责任感的警探 布莱恩是一个身材魁梧、严肃的警探 这是一个警探调查案件的场景，布莱恩与其他警员合作调查案件"
+
+chatbot = ChatHaruhi( role_name = role_name, persona = persona, llm = get_openai_response )
+```
+
+更多载入方式见文档后面的部分
+
+## 使用不同的模型进行inference
+
+直接从对应的response_XX.py中载入对应的response函数即可
+
+### openai
+
+```python
+from ChatHaruhi.openai import get_openai_response
+```
+
+需要设置环境变量
+
+```python
+import os
+os.environ["OPENAI_API_KEY"] = "your_api_key"
+# 如果你使用中转站
+os.environ["OPENAI_API_BASE"] = "中转站网址"
+```
+
+### Zhipu AI
+
+需要安装zhipuai的库，需要设置环境变量
+
+```python
+import os
+os.environ["ZHIPUAI_API_KEY"] = "your_api_key"
+
+from ChatHaruhi.zhipuai import get_zhipuai_response
+```
+
+### 百度文心
+
+需要安装文心erniebot的库，需要设置环境变量ERNIE_ACCESS_TOKEN
+
+```python
+import os
+os.environ["ERNIE_ACCESS_TOKEN"] = ""
+
+from ChatHaruhi.erniebot import get_erniebot_response
+```
+
+### Haruhi-Zero的本地模型
+
+TODO: 这块儿我回头补一下文档
+
+## 使用不同的角色载入方式
+
+
+
+### persona, role_name以及stories的载入
+
+```python
+from ChatHaruhi import ChatHaruhi
+from ChatHaruhi.openai import get_openai_response
+
+persona = """每当用户问询一个家庭关系，输出一个相关的家庭关系的逻辑句子
+
+{{RAG对话}}
+{{RAG对话}}
+"""
+
+role_name = "家庭关系机器人"
+
+stories = ["{{user}}:爷爷 {{role}}:爸爸的爸爸是爷爷",
+"{{user}}:奶奶 {{role}}:爸爸的妈妈是奶奶",
+"{{user}}:外公 {{role}}:妈妈的爸爸是外公",
+"{{user}}:外婆 {{role}}:妈妈的妈妈是外婆"]
+
+chatbot = ChatHaruhi( role_name = role_name, persona = persona, llm = get_response ,\
+   llm = get_openai_response )
+# 因为persona已经带了"{{RAG对话}}"，不需要额外运行add_rag_prompt_after_persona()
+
+response = chatbot.chat(user = '', text = '表姐？')
+```
+
+这个时候chatbot会使用chatbot.embedding来进行story的vec的计算，对于bge模型，使用了batch_size = 16进行批量抽取，GPU下速度非常快。为建议的使用方式。
+
+### 最完整的载入
+
+这里需要载入完整的persona, role_name, stories以及和chatbot.embedding所对应的每个story的vecs
+
+如果vecs的维度和模型的维度不一样，在使用的时候会报错
+
+```python
+persona = "你扮演爸爸\n\n{{RAG对话}}\n"
+role_name = "爸爸"
+stories = ["爸爸的爸爸是爷爷", "爸爸的妈妈是奶奶"]
+vecs = [[0.0,1.0,...],[1.0,0.0,...]]
+
+chatbot = ChatHaruhi( role_name = role_name, persona = persona, llm = get_response ,\
+                     stories = stories, story_vecs = vecs)
+```
+
+### sugar载入
+
+sugar载入是最简单的载入方式，只需要载入role_name即可，
+
+在载入之后需要调用chatbot.add_rag_prompt_after_persona()来添加RAG的prompt
+
+```python
+from ChatHaruhi import ChatHaruhi
+from ChatHaruhi.openai import get_openai_response
+
+chatbot = ChatHaruhi( role_name = 'haruhi', llm = get_openai_response )
+chatbot.add_rag_prompt_after_persona()
+```
+
+目前支持这些角色的sugar载入
+
+```python
+enname2zhname = {'tangshiye': '汤师爷', 'murongfu': '慕容复', 'liyunlong': '李云龙', 'Luna': 'Luna', 'wangduoyu': '王多鱼', 'Ron': 'Ron', 'jiumozhi': '鸠摩智', 'Snape': 'Snape', 'haruhi': '凉宫春日', 'Malfoy': 'Malfoy', 'xuzhu': '虚竹', 'xiaofeng': '萧峰', 'duanyu': '段誉', 'Hermione': 'Hermione', 'Dumbledore': 'Dumbledore', 'wangyuyan': '王语嫣', 'Harry': 'Harry', 'McGonagall': 'McGonagall', 'baizhantang': '白展堂', 'tongxiangyu': '佟湘玉', 'guofurong': '郭芙蓉', 'wanderer': '流浪者', 'zhongli': '钟离', 'hutao': '胡桃', 'Sheldon': 'Sheldon', 'Raj': 'Raj', 'Penny': 'Penny', 'weixiaobao': '韦小宝', 'qiaofeng': '乔峰', 'ayaka': '神里绫华', 'raidenShogun': '雷电将军', 'yuqian': '于谦'}
+```
 
 # 资源汇总(临时)
 
