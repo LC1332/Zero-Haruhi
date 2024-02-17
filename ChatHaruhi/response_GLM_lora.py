@@ -40,25 +40,27 @@ def init_client(model_name: str, verbose: bool) -> None:
         print("Using device: ", device)
 
     # TODO 上传模型后，更改为从huggingface获取模型
-    client = AutoPeftModelForCausalLM.from_pretrained(
-        model_name, trust_remote_code=True)
-    tokenizer_dir = client.peft_config['default'].base_model_name_or_path
-    if verbose:
-        print(tokenizer_dir)
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_name, trust_remote_code=True)
+    # client = AutoPeftModelForCausalLM.from_pretrained(
+    #     model_name, trust_remote_code=True)
+    # tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+    # if verbose:
+    #     print(tokenizer_dir)
+    # tokenizer = AutoTokenizer.from_pretrained(
+    #     model_name, trust_remote_code=True)
 
-    # try:
-    #     tokenizer = AutoTokenizer.from_pretrained(
-    #         model_name, trust_remote_code=True, local_files_only=True)
-    #     client = AutoModelForCausalLM.from_pretrained(
-    #         model_name, trust_remote_code=True, local_files_only=True)
-    # except Exception:
-    #     if pretrained_model_download(model_name, verbose=verbose):
-    #         tokenizer = AutoTokenizer.from_pretrained(
-    #             model_name, trust_remote_code=True, local_files_only=True)
-    #         client = AutoModelForCausalLM.from_pretrained(
-    #             model_name, trust_remote_code=True, local_files_only=True)
+    try:
+        client = AutoPeftModelForCausalLM.from_pretrained(
+            model_name, trust_remote_code=True, local_files_only=True)
+        tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+        tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer_dir, trust_remote_code=True, local_files_only=True)
+    except Exception:
+        if pretrained_model_download(model_name, verbose=verbose) and pretrained_model_download(tokenizer,verbose=verbose):
+            client = AutoPeftModelForCausalLM.from_pretrained(
+                model_name, trust_remote_code=True, local_files_only=True)
+            tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+            tokenizer = AutoTokenizer.from_pretrained(
+                tokenizer_dir, trust_remote_code=True, local_files_only=True)
 
     # client = client.to(device).eval()
     client = client.to(device).eval()
