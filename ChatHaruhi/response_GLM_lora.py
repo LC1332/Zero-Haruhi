@@ -3,7 +3,7 @@ from string import Template
 from typing import List, Dict
 
 import torch.cuda
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer
 from peft import AutoPeftModelForCausalLM
 
 
@@ -46,7 +46,7 @@ def init_client(model_name: str, verbose: bool) -> None:
     if verbose:
         print(tokenizer_dir)
     tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_dir, trust_remote_code=True)
+        model_name, trust_remote_code=True)
 
     # try:
     #     tokenizer = AutoTokenizer.from_pretrained(
@@ -61,7 +61,7 @@ def init_client(model_name: str, verbose: bool) -> None:
     #             model_name, trust_remote_code=True, local_files_only=True)
 
     # client = client.to(device).eval()
-    client = client.eval()
+    client = client.to(device).eval()
 
 
 def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
@@ -115,7 +115,7 @@ def message2query(messages: List[Dict[str, str]]) -> str:
     return "".join([template.substitute(message) for message in messages])
 
 
-def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/checkpoint-1500", verbose: bool = True):
+def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/lora", verbose: bool = True):
     global client
     global tokenizer
 

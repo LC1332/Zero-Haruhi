@@ -63,16 +63,6 @@ def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
             `bool` 是否下载成功
     """
     # TODO 使用hf镜像加速下载 未测试windows端
-
-    # 判断是否使用HF_transfer，默认不使用。
-    if os.getenv("HF_HUB_ENABLE_HF_TRANSFER") == 1:
-        try:
-            import hf_transfer
-        except ImportError:
-            print("Install hf_transfer.")
-            os.system("pip -q install hf_transfer")
-            import hf_transfer
-
     # 尝试引入huggingface_hub
     try:
         import huggingface_hub
@@ -85,7 +75,7 @@ def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
     try:
         print(f"downloading {model_name_or_path}")
         huggingface_hub.snapshot_download(
-            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False)
+            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False, ignore_patterns=["pytorch_mode*.bin"])
     except Exception as e:
         raise e
 
@@ -105,7 +95,7 @@ def message2query(messages: List[Dict[str, str]]) -> str:
     return "".join([template.substitute(message) for message in messages])
 
 
-def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/train_2024-02-16-17-51", verbose: bool = False):
+def get_response(message, model_name: str = "THUDM/chatglm3-6b", verbose: bool = False):
     global client
     global tokenizer
 
