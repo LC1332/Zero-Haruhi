@@ -15,7 +15,7 @@
 </p>
 
 <details>
-  <summary> (TBD) Chat凉宫春日的3.0版本和HaruhiZero模型由李鲁鲁, 豆角, 刘崇寒, 米唯实, BPSK 等开发 </summary>
+  <summary> (TBD) Chat凉宫春日的3.0版本和HaruhiZero模型由李鲁鲁, 豆角, 刘崇寒, 米唯实, BPSK, JiangYH等开发 </summary>
 
 开发人员持续增加中
 
@@ -56,7 +56,6 @@ Linkang Zhan( [JunityZhan@Case Western Reserve University](https://github.com/Ju
 
 </details>
 
-Chat凉宫春日3.0由李鲁鲁, 刘崇寒, 豆角, 米唯实等开发，正在开发中。详情见Contributors
 
 # TODO
 
@@ -134,7 +133,7 @@ chatbot = ChatHaruhi( role_name = role_name, persona = persona, llm = get_respon
 response = chatbot.chat(user = '', text = '表姐？')
 ```
 
-当然，建立角色记忆库对于一般的用户来说是比较困难的，所以自Haruhi-Zero模型之后，我们也用户创建不使用记忆库的角色
+当然，建立角色记忆库对于一般的用户来说是比较困难的，所以自Haruhi-Zero模型之后，我们也支持用户创建不使用记忆库的角色
 
 ```python
 from ChatHaruhi import ChatHaruhi

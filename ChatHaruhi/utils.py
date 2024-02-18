@@ -1,4 +1,74 @@
 import tiktoken
+import os
+
+def get_model_name2funcs( locol_model_names = [] ):
+    ans = {}
+
+    # openai
+    if "OPENAI_API_KEY" in os.environ:
+        try:
+            from .response_openai import get_response as get_response_openai
+            ans["openai"] = get_response_openai
+        except:
+            print("OPENAI_API_KEY existed but failed to load response_openai.get_response, may need to pip install openai")
+
+    # zhipu
+    if "ZHIPUAI_API_KEY" in os.environ:
+        try:
+            from .response_zhipu import get_response as get_response_zhipu
+            ans["zhipu"] = get_response_zhipu
+        except:
+            print("ZHIPUAI_API_KEY existed but failed to load response_zhipu.get_response, may need to pip install zhipuai")
+
+    # ernie
+    if "ERNIE_ACCESS_TOKEN" in os.environ:
+        try:
+            from .response_erniebot import get_response as get_response_ernie
+            ans["ernie"] = get_response_ernie
+        except:
+            print("ERNIE_ACCESS_TOKEN existed but failed to load response_erniebot.get_response, may need to pip install ernie")
+
+    # spark
+    if "SPARK_API_KEY" in os.environ:
+        try:
+            from .response_spark import get_response as get_response_spark
+            ans["spark"] = get_response_spark
+        except:
+            print("SPARK_API_KEY existed but failed to load response_spark.get_response")
+
+    if "BAICHUAN_API_KEY" in os.environ:
+        try:
+            from .response_baichuan import get_response as get_response_baichuan
+            ans["baichuan"] = get_response_baichuan
+        except:
+            print("BAICHUAN_API_KEY existed but failed to load response_baichuan.")
+
+    for local_model_name in locol_model_names:
+        if local_model_name.lower().strip() == "qwen1_8b":
+            try:
+                from .response_qwen1_8B import get_response as get_response_qwen1_8B
+                ans["qwen1_8B"] = get_response_qwen1_8B
+            except:
+                print("Failed to load response_qwen1_8B.get_response")
+            break
+        elif local_model_name.lower().strip() == "glm":
+            try:
+                from .response_GLM_local import get_response as get_response_GLM
+                ans["GLM"] = get_response_GLM
+            except:
+                print("Failed to load response_GLM.get_response")
+            break
+        elif local_model_name.lower().strip() == "glm_lora":
+            try:
+                from .response_GLM_lora import get_response as get_response_GLM_lora
+                ans["GLM_lora"] = get_response_GLM_lora
+            except:
+                print("Failed to load response_GLM_lora.get_response")
+            break
+
+    return ans
+
+    
 
 _enc_model = None
 
