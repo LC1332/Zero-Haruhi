@@ -4,7 +4,9 @@ from typing import List, Dict
 
 import torch.cuda
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from peft import AutoPeftModelForCausalLM
+from peft import AutoPeftModelForCausalLM, PeftConfig, get_peft_model
+
+from ChatHaruhi.response_GLM_local import pretrained_model_download
 
 
 aclient = None
@@ -28,6 +30,9 @@ def init_client(model_name: str, verbose: bool) -> None:
     global client
     global tokenizer
 
+    if verbose:
+        print("进入init_client")
+
     # 判断 使用MPS、CUDA、CPU运行模型
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -40,66 +45,112 @@ def init_client(model_name: str, verbose: bool) -> None:
         print("Using device: ", device)
 
     # TODO 上传模型后，更改为从huggingface获取模型
-    client = AutoPeftModelForCausalLM.from_pretrained(
-        model_name, trust_remote_code=True)
-    tokenizer_dir = client.peft_config['default'].base_model_name_or_path
-    if verbose:
-        print(tokenizer_dir)
+    # client = AutoPeftModelForCausalLM.from_pretrained(
+    #     model_name, trust_remote_code=True)
+    # tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+    # if verbose:
+    #     print(tokenizer_dir)
+    # tokenizer = AutoTokenizer.from_pretrained(
+    #     model_name, trust_remote_code=True)
+
+    # pretrained_model_download(model_name, verbose=verbose)
+    # peft_config=AutoPeftConfig
+    # client = AutoPeftModelForCausalLM.from_pretrained(
+    #     model_name, trust_remote_code=True, local_files_only=True)
+    # tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+    # pretrained_model_download(tokenizer_dir, verbose=verbose)
+    # tokenizer = AutoTokenizer.from_pretrained(
+    #     tokenizer_dir, trust_remote_code=True, local_files_only=True)
+
+    # 加载peft_config
+    try:
+        if verbose:
+            print(f"在try中加载模型{model_name}")
+        peft_config = PeftConfig.from_pretrained(
+            model_name, trust_remote_code=True, local_files_only=True)
+        if verbose:
+            print(f"在try中加载模型完成")
+    except OSError as e:
+        if pretrained_model_download(model_name, verbose=verbose):
+            if verbose:
+                print(f"在except中加载模型{model_name}")
+            peft_config = PeftConfig.from_pretrained(
+                model_name, trust_remote_code=True, local_files_only=True)
+            if verbose:
+                print("在except中加载模型完成")
+        else:
+            raise (f"下载peft_config {model_name}失败", e)
+
+    base_model_name = peft_config.base_model_name_or_path
+
+    # 加载模型
+    try:
+        if verbose:
+            print(f"在try中加载模型{base_model_name}")
+        client = AutoModelForCausalLM.from_pretrained(
+            base_model_name, trust_remote_code=True, local_files_only=True)
+        if verbose:
+            print(f"在try中加载模型完成")
+    except OSError as e:
+        if pretrained_model_download(base_model_name, verbose=verbose):
+            if verbose:
+                print(f"在except中加载模型{base_model_name}")
+            client = AutoPeftModelForCausalLM.from_pretrained(
+                base_model_name, trust_remote_code=True, local_files_only=True)
+            if verbose:
+                print(f"在except中加载模型完成")
+        else:
+            raise (f"下载{base_model_name}模型失败", e)
+
+    client = get_peft_model(client, peft_config)
+
+    # 加载tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_dir, trust_remote_code=True)
+        base_model_name, trust_remote_code=True, local_files_only=True)
 
     # try:
-    #     tokenizer = AutoTokenizer.from_pretrained(
+    #     if verbose:
+    #         print("在try中加载模型")
+    #     client = AutoPeftModelForCausalLM.from_pretrained(
     #         model_name, trust_remote_code=True, local_files_only=True)
-    #     client = AutoModelForCausalLM.from_pretrained(
-    #         model_name, trust_remote_code=True, local_files_only=True)
-    # except Exception:
+    #     if verbose:
+    #         print("在try中加载模型完成")
+    #     # tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+    #     # tokenizer = AutoTokenizer.from_pretrained(
+    #     #     tokenizer_dir, trust_remote_code=True, local_files_only=True)
+    # except Exception as e:
+    #     if verbose:
+    #         print("在except中加载模型，错误为", e)
     #     if pretrained_model_download(model_name, verbose=verbose):
+    #         client = AutoPeftModelForCausalLM.from_pretrained(
+    #             model_name, trust_remote_code=True, local_files_only=True)
+    #     if verbose:
+    #         print("在except中加载模型完成。")
+
+    # if pretrained_model_download(model_name, verbose=verbose):
+    # if not client:
+    #     client = AutoPeftModelForCausalLM.from_pretrained(
+    #         model_name, trust_remote_code=True, local_files_only=True)
+    # if client:
+    #     tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+    #     if pretrained_model_download(tokenizer_dir, verbose=verbose):
     #         tokenizer = AutoTokenizer.from_pretrained(
-    #             model_name, trust_remote_code=True, local_files_only=True)
-    #         client = AutoModelForCausalLM.from_pretrained(
-    #             model_name, trust_remote_code=True, local_files_only=True)
+    #             tokenizer_dir, trust_remote_code=True, local_files_only=True)
+    # if not client:
+    #     raise ("模型加载失败")
+
+    # if verbose:
+    #     print(tokenizer_dir)
+    # try:
+    #     tokenizer = AutoTokenizer.from_pretrained(
+    #         tokenizer_dir, trust_remote_code=True, local_files_only=True)
+    # except Exception:
+    #     if pretrained_model_download(tokenizer_dir, verbose=verbose):
+    #         tokenizer = AutoTokenizer.from_pretrained(
+    #             tokenizer_dir, trust_remote_code=True, local_files_only=True)
 
     # client = client.to(device).eval()
-    client = client.eval()
-
-
-def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
-    """
-        使用huggingface_hub下载模型（model_name_or_path）。下载成功返回true，失败返回False。
-        Params: 
-            model_name_or_path (`str`): 模型的huggingface地址
-        Returns:
-            `bool` 是否下载成功
-    """
-    # TODO 使用hf镜像加速下载 未测试windows端
-
-    # 判断是否使用HF_transfer，默认不使用。
-    if os.getenv("HF_HUB_ENABLE_HF_TRANSFER") == 1:
-        try:
-            import hf_transfer
-        except ImportError:
-            print("Install hf_transfer.")
-            os.system("pip -q install hf_transfer")
-            import hf_transfer
-
-    # 尝试引入huggingface_hub
-    try:
-        import huggingface_hub
-    except ImportError:
-        print("Install huggingface_hub.")
-        os.system("pip -q install huggingface_hub")
-        import huggingface_hub
-
-    # 使用huggingface_hub下载模型。
-    try:
-        print(f"downloading {model_name_or_path}")
-        huggingface_hub.snapshot_download(
-            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False)
-    except Exception as e:
-        raise e
-
-    return True
+    client = client.to(device).eval()
 
 
 def message2query(messages: List[Dict[str, str]]) -> str:
@@ -115,7 +166,7 @@ def message2query(messages: List[Dict[str, str]]) -> str:
     return "".join([template.substitute(message) for message in messages])
 
 
-def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/checkpoint-1500", verbose: bool = True):
+def get_response(message, model_name: str = "silk-road/Haruhi-Zero-GLM3-6B-Lora-0_4", verbose: bool = True):
     global client
     global tokenizer
 
