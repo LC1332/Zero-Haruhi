@@ -5,7 +5,7 @@ def get_model_name2funcs( locol_model_names = [] ):
     ans = {}
 
     # openai
-    if "OPENAI_API_KEY" in os.environ:
+    if "OPENAI_API_KEY" in os.environ and os.getenv("OPENAI_API_KEY").strip() != "":
         try:
             from .response_openai import get_response as get_response_openai
             ans["openai"] = get_response_openai
@@ -13,7 +13,7 @@ def get_model_name2funcs( locol_model_names = [] ):
             print("OPENAI_API_KEY existed but failed to load response_openai.get_response, may need to pip install openai")
 
     # zhipu
-    if "ZHIPUAI_API_KEY" in os.environ:
+    if "ZHIPUAI_API_KEY" in os.environ and os.getenv("ZHIPUAI_API_KEY").strip() != "":
         try:
             from .response_zhipu import get_response as get_response_zhipu
             ans["zhipu"] = get_response_zhipu
@@ -21,7 +21,7 @@ def get_model_name2funcs( locol_model_names = [] ):
             print("ZHIPUAI_API_KEY existed but failed to load response_zhipu.get_response, may need to pip install zhipuai")
 
     # ernie
-    if "ERNIE_ACCESS_TOKEN" in os.environ:
+    if "ERNIE_ACCESS_TOKEN" in os.environ and os.getenv("ERNIE_ACCESS_TOKEN").strip() != "":
         try:
             from .response_erniebot import get_response as get_response_ernie
             ans["ernie"] = get_response_ernie
@@ -29,14 +29,14 @@ def get_model_name2funcs( locol_model_names = [] ):
             print("ERNIE_ACCESS_TOKEN existed but failed to load response_erniebot.get_response, may need to pip install ernie")
 
     # spark
-    if "SPARK_API_KEY" in os.environ:
+    if "SPARK_API_KEY" in os.environ and os.getenv("SPARK_API_KEY").strip() != "":
         try:
             from .response_spark import get_response as get_response_spark
             ans["spark"] = get_response_spark
         except:
             print("SPARK_API_KEY existed but failed to load response_spark.get_response")
 
-    if "BAICHUAN_API_KEY" in os.environ:
+    if "BAICHUAN_API_KEY" in os.environ and os.getenv("BAICHUAN_API_KEY").strip() != "":
         try:
             from .response_baichuan import get_response as get_response_baichuan
             ans["baichuan"] = get_response_baichuan
@@ -65,6 +65,9 @@ def get_model_name2funcs( locol_model_names = [] ):
             except:
                 print("Failed to load response_GLM_lora.get_response")
             break
+
+    if len(ans) == 0:
+        ans["foo"] = lambda x: "No model is available"
 
     return ans
 
