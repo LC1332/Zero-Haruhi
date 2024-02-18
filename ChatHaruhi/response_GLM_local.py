@@ -75,7 +75,7 @@ def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
     try:
         print(f"downloading {model_name_or_path}")
         huggingface_hub.snapshot_download(
-            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False, ignore_patterns=["pytorch_mode*.bin"])
+            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False, ignore_patterns=["pytorch_model*"])
     except Exception as e:
         raise e
 
