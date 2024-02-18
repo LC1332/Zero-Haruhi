@@ -63,50 +63,62 @@ def init_client(model_name: str, verbose: bool) -> None:
     #     tokenizer_dir, trust_remote_code=True, local_files_only=True)
 
     # 加载peft_config
-    try:
-        if verbose:
-            print(f"在try中加载模型{model_name}")
-        peft_config = PeftConfig.from_pretrained(
-            model_name, trust_remote_code=True, local_files_only=True)
-        if verbose:
-            print(f"在try中加载模型完成")
-    except OSError as e:
-        if pretrained_model_download(model_name, verbose=verbose):
-            if verbose:
-                print(f"在except中加载模型{model_name}")
-            peft_config = PeftConfig.from_pretrained(
-                model_name, trust_remote_code=True, local_files_only=True)
-            if verbose:
-                print("在except中加载模型完成")
-        else:
-            raise (f"下载peft_config {model_name}失败", e)
+    # try:
+    #     if verbose:
+    #         print(f"在try中加载模型{model_name}")
+    #     peft_config = PeftConfig.from_pretrained(
+    #         model_name, trust_remote_code=True, local_files_only=True)
+    #     if verbose:
+    #         print(f"在try中加载模型完成")
+    # except OSError as e:
+    #     if pretrained_model_download(model_name, verbose=verbose):
+    #         if verbose:
+    #             print(f"在except中加载模型{model_name}")
+    #         peft_config = PeftConfig.from_pretrained(
+    #             model_name, trust_remote_code=True, local_files_only=True)
+    #         if verbose:
+    #             print("在except中加载模型完成")
+    #     else:
+    #         raise (f"下载peft_config {model_name}失败", e)
 
-    base_model_name = peft_config.base_model_name_or_path
+    # # 加载模型
+    # try:
+    #     if verbose:
+    #         print(f"在try中加载模型{base_model_name}")
+    #     client = AutoModelForCausalLM.from_pretrained(
+    #         base_model_name, trust_remote_code=True, local_files_only=True)
+    #     if verbose:
+    #         print(f"在try中加载模型完成")
+    # except OSError as e:
+    #     if pretrained_model_download(base_model_name, verbose=verbose):
+    #         if verbose:
+    #             print(f"在except中加载模型{base_model_name}")
+    #         client = AutoPeftModelForCausalLM.from_pretrained(
+    #             base_model_name, trust_remote_code=True, local_files_only=True)
+    #         if verbose:
+    #             print(f"在except中加载模型完成")
+    #     else:
+    #         raise (f"下载{base_model_name}模型失败", e)
 
-    # 加载模型
-    try:
-        if verbose:
-            print(f"在try中加载模型{base_model_name}")
-        client = AutoModelForCausalLM.from_pretrained(
-            base_model_name, trust_remote_code=True, local_files_only=True)
-        if verbose:
-            print(f"在try中加载模型完成")
-    except OSError as e:
-        if pretrained_model_download(base_model_name, verbose=verbose):
-            if verbose:
-                print(f"在except中加载模型{base_model_name}")
-            client = AutoPeftModelForCausalLM.from_pretrained(
-                base_model_name, trust_remote_code=True, local_files_only=True)
-            if verbose:
-                print(f"在except中加载模型完成")
-        else:
-            raise (f"下载{base_model_name}模型失败", e)
+    # TODO 直接使用peft_config加载模型
+    # peft_config = PeftConfig.from_pretrained(
+    #     model_name, trust_remote_code=True)
 
-    client = get_peft_model(client, peft_config)
+    # base_model_name = peft_config.base_model_name_or_path
 
-    # 加载tokenizer
+    # client = get_peft_model(client, peft_config)
+    # client = AutoModelForCausalLM.from_pretrained(
+    #     base_model_name, trust_remote_code=True)
+    # # 加载tokenizer
+    # tokenizer = AutoTokenizer.from_pretrained(
+    #     base_model_name, trust_remote_code=True)
+
+    # TODO
+    client = AutoPeftModelForCausalLM.from_pretrained(
+        model_name, trust_remote_code=True)
+    tokenizer_dir = client.peft_config['default'].base_model_name_or_path
     tokenizer = AutoTokenizer.from_pretrained(
-        base_model_name, trust_remote_code=True, local_files_only=True)
+        tokenizer_dir, trust_remote_code=True)
 
     # try:
     #     if verbose:
