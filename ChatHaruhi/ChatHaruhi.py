@@ -38,6 +38,7 @@ class ChatHaruhi:
                  role_from_hf = None,
                  role_from_jsonl = None,
                  llm = None, # 默认的message2response的函数
+                 llm_params = None,
                  llm_async = None, # 默认的message2response的async函数
                  user_name_in_message = "default",
                  verbose = None,
@@ -105,6 +106,7 @@ class ChatHaruhi:
             raise ValueError("persona和role_name必须同时设置，或者role_name是ChatHaruhi的预设人物")
 
         self.llm, self.llm_async = llm, llm_async
+        self.llm_params = llm_params
         if not self.llm and self.verbose:
             print("warning, llm没有设置，仅get_message起作用，调用chat将回复idle message")
 
@@ -174,9 +176,14 @@ class ChatHaruhi:
         self.set_new_user(user)
         message = self.get_message(user, text)
         if self.llm:
-            response = self.llm(message)
-            self.append_message(response)
-            return response
+            if self.llm_params:
+                response = self.llm(message, model_name = self.llm_params)
+                self.append_message(response)
+                return response
+            else:
+                response = self.llm(message)
+                self.append_message(response)
+                return response
         return None
 
     async def async_chat(self, user, text):
