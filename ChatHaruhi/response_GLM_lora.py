@@ -101,24 +101,27 @@ def init_client(model_name: str, verbose: bool) -> None:
     #         raise (f"下载{base_model_name}模型失败", e)
 
     # TODO 直接使用peft_config加载模型
-    # peft_config = PeftConfig.from_pretrained(
-    #     model_name, trust_remote_code=True)
+    # 加载peft_config
+    peft_config = PeftConfig.from_pretrained(
+        model_name, trust_remote_code=True)
 
-    # base_model_name = peft_config.base_model_name_or_path
+    base_model_name = peft_config.base_model_name_or_path
 
-    # client = get_peft_model(client, peft_config)
-    # client = AutoModelForCausalLM.from_pretrained(
-    #     base_model_name, trust_remote_code=True)
-    # # 加载tokenizer
-    # tokenizer = AutoTokenizer.from_pretrained(
-    #     base_model_name, trust_remote_code=True)
+    # 加载模型
+    client = AutoModelForCausalLM.from_pretrained(
+        base_model_name, trust_remote_code=True)
+    client = get_peft_model(client, peft_config)
+    
+    # 加载tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model_name, trust_remote_code=True)
 
     # TODO
-    client = AutoPeftModelForCausalLM.from_pretrained(
-        model_name, trust_remote_code=True)
-    tokenizer_dir = client.peft_config['default'].base_model_name_or_path
-    tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_dir, trust_remote_code=True)
+    # client = Auto.from_pretrained(
+    #     model_name, trust_remote_code=True)
+    # tokenizer_dir = client.peft_config['default'].base_model_name_or_path
+    # tokenizer = AutoTokenizer.from_pretrained(
+    #     tokenizer_dir, trust_remote_code=True)
 
     # try:
     #     if verbose:
