@@ -95,7 +95,7 @@ def message2query(messages: List[Dict[str, str]]) -> str:
     return "".join([template.substitute(message) for message in messages])
 
 
-def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/train_{1e-5}_{2024-02-19-07-37-09}", verbose: bool = False):
+def get_response(message, model_name: str = "train_1e-5_2024-02-20-03-12-33", verbose: bool = False):
     global client
     global tokenizer
 
