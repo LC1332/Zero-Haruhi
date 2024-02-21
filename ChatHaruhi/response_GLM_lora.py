@@ -6,9 +6,6 @@ import torch.cuda
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import AutoPeftModelForCausalLM, PeftConfig, get_peft_model
 
-from ChatHaruhi.response_GLM_local import pretrained_model_download
-
-
 aclient = None
 
 client = None
