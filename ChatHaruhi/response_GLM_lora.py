@@ -6,9 +6,6 @@ import torch.cuda
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import AutoPeftModelForCausalLM, PeftConfig, get_peft_model
 
-from ChatHaruhi.response_GLM_local import pretrained_model_download
-
-
 aclient = None
 
 client = None
@@ -181,7 +178,7 @@ def message2query(messages: List[Dict[str, str]]) -> str:
     return "".join([template.substitute(message) for message in messages])
 
 
-def get_response(message, model_name: str = "silk-road/Haruhi-Zero-GLM3-6B-Lora-0_4", verbose: bool = True):
+def get_response(message, model_name: str = "train_{1e-4}_{2024-02-20-09-02-44}", verbose: bool = True):
     global client
     global tokenizer
 
