@@ -54,10 +54,10 @@ def init_client(model_name: str, verbose: bool) -> None:
             client = AutoModelForCausalLM.from_pretrained(
                 model_name, trust_remote_code=True, local_files_only=True)
 
-    client = client.to(device).eval()
+    client = client.half().to(device).eval()
 
 
-def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/train_1e-4_2024-02-22-12-08-38/", verbose: bool = True):
+def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/train_1e-4_2024-02-22-12-56-03", verbose: bool = True):
     global client
     global tokenizer
 
