@@ -4,16 +4,15 @@ from typing import List, Dict
 
 import torch.cuda
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from ChatHaruhi.response_GLM_local import pretrained_model_download
 
-from ChatHaruhi.utils import message2query4Gemma, pretrained_model_download
+from ChatHaruhi.response_Gemma_2b import message2query4Gemma
+
 
 aclient = None
 
 client = None
 tokenizer = None
-
-END_POINT = "https://hf-mirror.com"
-
 
 def init_client(model_name: str, verbose: bool) -> None:
     """
@@ -66,15 +65,9 @@ def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/train_1e
         init_client(model_name, verbose=verbose)
 
     if verbose:
-        # print(message)
-        print(f"message2query:{message2query4Gemma(message,tokenizer)}")
+        print(message)
+        print(message2query4Gemma(message,tokenizer))
 
-    inputs = tokenizer.encode(
-        message2query4Gemma(message, tokenizer), return_tensors="pt")
-    response = client.generate(input_ids=inputs.to(
-        client.device), max_new_tokens=1024)
-
-    response = tokenizer.decode(
-        response[0], skip_special_tokens=True).split("model\n")[-1]
+    response, history = client.chat(tokenizer, message2query4Gemma(message,tokenizer))
 
     return response

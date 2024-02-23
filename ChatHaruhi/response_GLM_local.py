@@ -5,12 +5,12 @@ from typing import List, Dict
 import torch.cuda
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+from ChatHaruhi.utils import pretrained_model_download
+
 aclient = None
 
 client = None
 tokenizer = None
-
-END_POINT = "https://hf-mirror.com"
 
 
 def init_client(model_name: str, verbose: bool) -> None:
@@ -54,34 +54,6 @@ def init_client(model_name: str, verbose: bool) -> None:
                 model_name, trust_remote_code=True, local_files_only=True)
 
     client = client.to(device).eval()
-
-
-def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
-    """
-        使用huggingface_hub下载模型（model_name_or_path）。下载成功返回true，失败返回False。
-        Params: 
-            model_name_or_path (`str`): 模型的huggingface地址
-        Returns:
-            `bool` 是否下载成功
-    """
-    # TODO 使用hf镜像加速下载 未测试windows端
-    # 尝试引入huggingface_hub
-    try:
-        import huggingface_hub
-    except ImportError:
-        print("Install huggingface_hub.")
-        os.system("pip -q install huggingface_hub")
-        import huggingface_hub
-
-    # 使用huggingface_hub下载模型。
-    try:
-        print(f"downloading {model_name_or_path}")
-        huggingface_hub.snapshot_download(
-            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False, ignore_patterns=["pytorch_model*"])
-    except Exception as e:
-        raise e
-
-    return True
 
 
 def message2query(messages: List[Dict[str, str]]) -> str:
