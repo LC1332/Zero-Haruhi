@@ -60,7 +60,7 @@ def init_client(model_name: str, verbose: bool) -> None:
     client = client.to(device).eval()
 
 
-def get_response(message, model_name: str = "train_{1e-4}_{2024-02-20-09-02-44}", verbose: bool = True):
+def get_response(message, model_name: str = "silk-road/Haruhi-Zero-GLM3-6B-Lora-0_4", verbose: bool = True):
     global client
     global tokenizer
 
