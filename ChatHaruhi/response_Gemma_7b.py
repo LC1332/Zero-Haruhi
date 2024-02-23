@@ -14,6 +14,7 @@ aclient = None
 client = None
 tokenizer = None
 
+
 def init_client(model_name: str, verbose: bool) -> None:
     """
         初始化模型，通过可用的设备进行模型加载推理。
@@ -29,7 +30,7 @@ def init_client(model_name: str, verbose: bool) -> None:
 
     # 判断 使用MPS、CUDA、CPU运行模型
     if torch.cuda.is_available():
-        device = torch.device("cuda")
+        device = torch.device("cuda", 3)
     elif torch.backends.mps.is_available():
         device = torch.device("mps")
     else:
@@ -42,22 +43,22 @@ def init_client(model_name: str, verbose: bool) -> None:
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(
-            model_name, trust_remote_code=True, local_files_only=True)
+            model_name, trust_remote_code=True, local_files_only=True, torch_dtype=torch.float16)
         client = AutoModelForCausalLM.from_pretrained(
-            model_name, trust_remote_code=True, local_files_only=True)
+            model_name, trust_remote_code=True, local_files_only=True, torch_dtype=torch.float16)
     except Exception as e:
         if verbose:
             print(e)
         if pretrained_model_download(model_name, verbose=verbose):
             tokenizer = AutoTokenizer.from_pretrained(
-                model_name, trust_remote_code=True, local_files_only=True)
+                model_name, trust_remote_code=True, local_files_only=True, torch_dtype=torch.float16)
             client = AutoModelForCausalLM.from_pretrained(
-                model_name, trust_remote_code=True, local_files_only=True)
+                model_name, trust_remote_code=True, local_files_only=True, torch_dtype=torch.float16)
 
-    client = client.half().to(device).eval()
+    client = client.to(device).eval()
 
 
-def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/train_1e-4_2024-02-22-12-56-03", verbose: bool = True):
+def get_response(message, model_name: str = "silk-road/Haruhi-Zero-Gemma-7B-0_5", verbose: bool = True):
     global client
     global tokenizer
 
@@ -65,9 +66,15 @@ def get_response(message, model_name: str = "/workspace/jyh/Zero-Haruhi/train_1e
         init_client(model_name, verbose=verbose)
 
     if verbose:
-        print(message)
-        print(message2query4Gemma(message,tokenizer))
+        # print(message)
+        print(f"message2query:{message2query4Gemma(message,tokenizer)}")
 
-    response, history = client.chat(tokenizer, message2query4Gemma(message,tokenizer))
+    inputs = tokenizer.encode(
+        message2query4Gemma(message, tokenizer), return_tensors="pt")
+    response = client.generate(input_ids=inputs.to(
+        client.device), max_new_tokens=1024)
+
+    response = tokenizer.decode(
+        response[0], skip_special_tokens=True).split("model\n")[-1]
 
     return response
