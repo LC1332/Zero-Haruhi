@@ -30,7 +30,7 @@ def init_client(model_name: str, verbose: bool) -> None:
 
     # 判断 使用MPS、CUDA、CPU运行模型
     if torch.cuda.is_available():
-        device = torch.device("cuda", 3)
+        device = torch.device("cuda")
     elif torch.backends.mps.is_available():
         device = torch.device("mps")
     else:
