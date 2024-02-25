@@ -1,5 +1,8 @@
+from string import Template
 import tiktoken
 import os
+
+END_POINT = "https://hf-mirror.com"
 
 def get_model_name2funcs( locol_model_names = [] ):
     ans = {}
@@ -160,3 +163,56 @@ def save_datas_to_jsonl( file_path, datas ):
     with open(file_path, 'w', encoding = 'utf-8') as f:
         for data in datas:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
+
+def pretrained_model_download(model_name_or_path: str, verbose: bool) -> bool:
+    """
+        使用huggingface_hub下载模型（model_name_or_path）。下载成功返回true，失败返回False。
+        Params: 
+            model_name_or_path (`str`): 模型的huggingface地址
+        Returns:
+            `bool` 是否下载成功
+    """
+    # TODO 使用hf镜像加速下载 未测试windows端
+    # 尝试引入huggingface_hub
+    try:
+        import huggingface_hub
+    except ImportError:
+        print("Install huggingface_hub.")
+        os.system("pip -q install huggingface_hub")
+        import huggingface_hub
+
+    # 使用huggingface_hub下载模型。
+    try:
+        print(f"downloading {model_name_or_path}")
+        huggingface_hub.snapshot_download(
+            repo_id=model_name_or_path, endpoint=END_POINT, resume_download=True, local_dir_use_symlinks=False, ignore_patterns=["pytorch_model*"])
+    except Exception as e:
+        raise e
+
+    return True
+
+def message2query4GLM(messages) -> str:
+    # [{'role': 'user', 'content': '老师: 同学请自我介绍一下'}]
+    # <|system|>
+    # You are ChatGLM3, a large language model trained by Zhipu.AI. Follow the user's instructions carefully. Respond using markdown.
+    # <|user|>
+    # Hello
+    # <|assistant|>
+    # Hello, I'm ChatGLM3. What can I assist you today?
+    template = Template("<|$role|>\n$content\n")
+
+    return "".join([template.substitute(message) for message in messages])
+
+def message2query4Gemma(messages,tokenizer) -> str:
+    # [{'role': 'user', 'content': '老师: 同学请自我介绍一下'}]
+    # <start_of_turn>user
+    # Write a hello world program<end_of_turn>
+    # <start_of_turn>model
+
+    prompt = messages[0]['content']
+    messages[1]['content'] = f"{prompt}\n{messages[1]['content']}"
+
+    conversation = tokenizer.apply_chat_template(
+        messages[1:], tokenize=False, add_generation_prompt=True)
+
+    return conversation
