@@ -1,4 +1,4 @@
-from jinja2 import Template
+from string import Template
 import tiktoken
 import os
 
