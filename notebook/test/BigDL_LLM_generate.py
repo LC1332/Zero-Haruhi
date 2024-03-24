@@ -52,10 +52,7 @@ if __name__ == '__main__':
     
     # Generate predicted tokens
     with torch.inference_mode():
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-            ]
+        messages = prompt
         text = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
