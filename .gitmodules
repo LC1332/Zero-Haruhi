@@ -1,0 +1,6 @@
+[submodule "evaluation/LLaMA-Factory"]
+	path = evaluation/LLaMA-Factory
+	url = https://github.com/hiyouga/LLaMA-Factory.git
+[submodule "evaluation/CharacterEval"]
+	path = evaluation/CharacterEval
+	url = https://github.com/morecry/CharacterEval.git
