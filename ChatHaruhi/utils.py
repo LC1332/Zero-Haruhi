@@ -2,6 +2,8 @@ from string import Template
 import tiktoken
 import os
 
+import tqdm
+
 END_POINT = "https://hf-mirror.com"
 
 def package_role( system_prompt, texts_path , embedding ):
