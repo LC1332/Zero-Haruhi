@@ -32,7 +32,7 @@ def package_role( system_prompt, texts_path , embedding ):
                 current_str = f.read()
                 current_vec = embedding(current_str)
                 encode_vec = float_array_to_base64(current_vec)
-                datas.append({ 'text':current_str , embed_name:encode_vec})
+                datas.append({ 'text':current_str , embed_name_2:encode_vec})
 
                 # debug_count -= 1
                 # if debug_count == 0:
