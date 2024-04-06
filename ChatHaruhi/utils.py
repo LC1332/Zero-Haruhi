@@ -2,7 +2,45 @@ from string import Template
 import tiktoken
 import os
 
+import tqdm
+
 END_POINT = "https://hf-mirror.com"
+
+def package_role( system_prompt, texts_path , embedding ):
+    datas = []
+
+    # 暂时只有一种embedding 'luotuo_openai'
+    # embed_name_1 = 'luotuo_openai'
+    embed_name_2 = 'bge_zh_s15'
+
+    datas.append({ 'text':system_prompt , embed_name_2:'system_prompt'})
+    datas.append({ 'text':'Reserve Config Setting Here' , embed_name_2:'config'})
+    
+
+    # debug_count = 3
+
+    # for file in os.listdir(texts_path):
+
+    files = os.listdir(texts_path)
+
+    for i in tqdm.tqdm(range(len(files))):
+        file = files[i]
+        # if file name end with txt
+        if file.endswith(".txt"):
+            file_path = os.path.join(texts_path, file)
+            with open(file_path, 'r', encoding='utf-8') as f:
+                current_str = f.read()
+                current_vec = embedding(current_str)
+                encode_vec = float_array_to_base64(current_vec)
+                datas.append({ 'text':current_str , embed_name_2:encode_vec})
+
+                # debug_count -= 1
+                # if debug_count == 0:
+                #     break
+    return datas
+
+
+import struct
 
 def get_model_name2funcs( locol_model_names = [] ):
     ans = {}
