@@ -29,7 +29,7 @@ def get_response( message ):
     if client is None:
         init_client()
     response = client.chat.completions.create(\
-        model="gpt-3.5-turbo",\
+        model="gpt-3.5-turbo-0125",\
         messages = message, \
         max_tokens = 300, \
         temperature = 0.1 )
@@ -57,7 +57,7 @@ async def async_get_response( message ):
     if aclient is None:
         init_aclient()
     response = await aclient.chat.completions.create(\
-        model="gpt-3.5-turbo",\
+        model="gpt-3.5-turbo-0125",\
         messages = message, \
         max_tokens = 300, \
         temperature = 0.1 )
